@@ -4,6 +4,8 @@ package com.x256n.prtassistant.desktop.screen.home
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.x256n.prtassistant.desktop.model.StorageModel
 import com.x256n.prtassistant.desktop.navigation.Destinations
 import kotlinx.coroutines.*
@@ -19,6 +21,7 @@ import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
 
 class HomeViewModel(
 
@@ -77,7 +80,10 @@ class HomeViewModel(
                 }
                 is HomeEvent.RegexChanged -> {
                     _state.value = stateValue.copy(
-                        regex = event.value
+                        regex = event.value,
+                        resultText = stateValue.resultText.copy(
+                            selection = detectTextSelectionRange(event.value)
+                        )
                     )
                 }
                 is HomeEvent.ReplacementChanged -> {
@@ -218,6 +224,25 @@ class HomeViewModel(
         }
     }
 
+    private fun detectTextSelectionRange(value: String): TextRange {
+        if (value.isNotBlank()) {
+            val resultText = _state.value.resultText.text
+            val resultCursor = _state.value.sourceText.selection.start
+            try {
+                Regex(value).find(resultText)?.let { found ->
+                    var start = resultText.indexOf(found.value, startIndex = resultCursor)
+                    if (start == -1) {
+                        start = resultText.indexOf(found.value)
+                    }
+                    return TextRange(start, start + found.value.length)
+                }
+            } catch (e: PatternSyntaxException){
+                // Entering not finished
+            }
+        }
+        return TextRange(0, 0)
+    }
+
     private fun saveStorage() {
         val storage = _state.value.storage
         CoroutineScope(Dispatchers.Default).launch {
@@ -230,37 +255,37 @@ class HomeViewModel(
     }
 
     private suspend fun loadStorage() {
-            val storage: StorageModel? = withContext(Dispatchers.IO) {
-                val file = Paths.get("storage.json")
-                if (Files.exists(file)) {
-                    BufferedInputStream(FileInputStream(file.toFile())).use { stream ->
-                        Json.decodeFromStream(stream)
-                    }
-                } else null
-            }
-            storage?.let {
+        val storage: StorageModel? = withContext(Dispatchers.IO) {
+            val file = Paths.get("storage.json")
+            if (Files.exists(file)) {
+                BufferedInputStream(FileInputStream(file.toFile())).use { stream ->
+                    Json.decodeFromStream(stream)
+                }
+            } else null
+        }
+        storage?.let {
+            _state.value = _state.value.copy(
+                storage = storage,
+            )
+            if (_state.value.hasData) {
                 _state.value = _state.value.copy(
                     storage = storage,
+                    order = _state.value.selectedItem.order,
+                    name = _state.value.selectedItem.name,
+                    regex = _state.value.selectedItem.regex,
+                    replacement = _state.value.selectedItem.replacement,
+                    caseInsensitive = _state.value.selectedItem.caseInsensitive,
+                    dotAll = _state.value.selectedItem.dotAll,
+                    multiline = _state.value.selectedItem.multiline,
                 )
-                if (_state.value.hasData) {
-                    _state.value = _state.value.copy(
-                        storage = storage,
-                        order = _state.value.selectedItem.order,
-                        name = _state.value.selectedItem.name,
-                        regex = _state.value.selectedItem.regex,
-                        replacement = _state.value.selectedItem.replacement,
-                        caseInsensitive = _state.value.selectedItem.caseInsensitive,
-                        dotAll = _state.value.selectedItem.dotAll,
-                        multiline = _state.value.selectedItem.multiline,
-                    )
-                }
             }
+        }
     }
 
     private suspend fun applyChanges() {
         withContext(Dispatchers.Default) {
             replaceJob = async {
-                var processText = _state.value.sourceText
+                var processText = _state.value.sourceText.text
                 _state.value.storage.regexs.filter { it.enabled }.sortedBy { it.order }.forEach {
                     var mode = 0
                     if (it.caseInsensitive) mode = mode or Pattern.CASE_INSENSITIVE
@@ -271,17 +296,17 @@ class HomeViewModel(
                     processText = pattern.matcher(processText).replaceAll(it.replacement)
                 }
                 _state.value = _state.value.copy(
-                    resultText = processText
+                    resultText = TextFieldValue(processText)
                 )
                 replaceJob = null
             }
-                delay(3000)
-                if (replaceJob != null) {
-                    replaceJob?.cancel()
-                    _state.value = _state.value.copy(
-                        errorMessage = "It took more than 3 sec!"
-                    )
-                }
+            delay(3000)
+            if (replaceJob != null) {
+                replaceJob?.cancel()
+                _state.value = _state.value.copy(
+                    errorMessage = "It took more than 3 sec!"
+                )
             }
+        }
     }
 }

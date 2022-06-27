@@ -1,5 +1,6 @@
 package com.x256n.prtassistant.desktop.screen.home
 
+import androidx.compose.ui.text.input.TextFieldValue
 import com.x256n.prtassistant.desktop.model.RegexModel
 import com.x256n.prtassistant.desktop.model.StorageModel
 
@@ -17,8 +18,8 @@ data class HomeState(
     val dotAll: Boolean = false,
     val multiline: Boolean = false,
 
-    val sourceText: String = "aaaaa  \r\nbbb",
-    val resultText: String = "",
+    val sourceText: TextFieldValue = TextFieldValue(""),
+    val resultText: TextFieldValue = TextFieldValue(""),
 ) {
     val selectedItem
         get() =

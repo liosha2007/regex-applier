@@ -1,9 +1,10 @@
 package com.x256n.prtassistant.desktop.screen.home
 
+import androidx.compose.ui.text.input.TextFieldValue
 import com.x256n.prtassistant.desktop.model.RegexModel
 
 sealed class HomeEvent {
-    data class SourceChanged(val value: String) : HomeEvent()
+    data class SourceChanged(val value: TextFieldValue) : HomeEvent()
     data class RegexSelected(val value: RegexModel, val index: Int) : HomeEvent()
     data class DeleteClicked(val value: RegexModel) : HomeEvent()
 
