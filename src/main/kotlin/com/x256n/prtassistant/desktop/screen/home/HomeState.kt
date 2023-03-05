@@ -9,6 +9,7 @@ data class HomeState(
     val errorMessage: String? = null,
     val storage: StorageModel = StorageModel(),
     val selectedIndex: Int = 0,
+    val itemToDelete: RegexModel? = null,
 
     val order: Int? = null,
 

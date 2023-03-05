@@ -44,18 +44,26 @@ class HomeViewModel(
             when (event) {
                 is HomeEvent.SourceChanged -> {
                     _state.value = stateValue.copy(
+                        itemToDelete = null, // Reset deletion confirmation
                         sourceText = event.value
                     )
                     applyChanges()
                 }
                 is HomeEvent.RegexSelected -> {
                     _state.value = stateValue.copy(
+                        itemToDelete = null, // Reset deletion confirmation
                         selectedIndex = event.index,
                         order = event.value.order
                     )
                 }
                 is HomeEvent.DeleteClicked -> {
                     _state.value = stateValue.copy(
+                        itemToDelete = event.value
+                    )
+                }
+                is HomeEvent.DeleteConfirmed -> {
+                    _state.value = stateValue.copy(
+                        itemToDelete = null, // Reset deletion confirmation
                         storage = stateValue.storage.copy(
                             regexs = stateValue.storage.regexs.toMutableList().apply {
                                 remove(event.value)
@@ -70,6 +78,7 @@ class HomeViewModel(
                 }
                 is HomeEvent.ResultFocused -> {
                     _state.value = stateValue.copy(
+                        itemToDelete = null, // Reset deletion confirmation
                         resultText = stateValue.resultText.copy(
                             selection = TextRange(0, _state.value.resultText.text.length)
                         )
@@ -81,6 +90,7 @@ class HomeViewModel(
                         add(event.item.copy(enabled = !event.item.enabled))
                     }.sortedBy { it.order }
                     _state.value = stateValue.copy(
+                        itemToDelete = null, // Reset deletion confirmation
                         storage = stateValue.storage.copy(
                             regexs = regexs
                         ),
@@ -89,7 +99,7 @@ class HomeViewModel(
                     applyChanges()
                 }
                 is HomeEvent.UpClicked -> {
-                    val item = stateValue.selectedItem
+                    val item = event.item
                     if (item.order != null && item.order > 0) {
                         val selected = stateValue.storage.regexs.first { it.order == item.order }
                         val prew = stateValue.storage.regexs.first { it.order == item.order - 1 }
@@ -102,6 +112,7 @@ class HomeViewModel(
                         }.sortedBy { it.order }
 
                         _state.value = stateValue.copy(
+                            itemToDelete = null, // Reset deletion confirmation
                             storage = stateValue.storage.copy(
                                 regexs = regexs
                             ),
@@ -112,7 +123,7 @@ class HomeViewModel(
                     }
                 }
                 is HomeEvent.DownClicked -> {
-                    val item = stateValue.selectedItem
+                    val item = event.item
                     if (item.order != null && item.order < stateValue.storage.regexs.lastIndex) {
                         val selected = stateValue.storage.regexs.first { it.order == item.order }
                         val next = stateValue.storage.regexs.first { it.order == item.order + 1 }
@@ -125,6 +136,7 @@ class HomeViewModel(
                         }.sortedBy { it.order }
 
                         _state.value = stateValue.copy(
+                            itemToDelete = null, // Reset deletion confirmation
                             storage = stateValue.storage.copy(
                                 regexs = regexs
                             ),
@@ -186,6 +198,11 @@ class HomeViewModel(
                 is HomeEvent.ResetError -> {
                     _state.value = stateValue.copy(
                         errorMessage = null
+                    )
+                }
+                is HomeEvent.RegexDialogShown -> {
+                    _state.value = stateValue.copy(
+                        itemToDelete = null, // Reset deletion confirmation
                     )
                 }
             }

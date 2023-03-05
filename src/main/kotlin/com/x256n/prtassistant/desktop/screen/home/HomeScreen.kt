@@ -1,7 +1,10 @@
 package com.x256n.prtassistant.desktop.screen.home
 
 import WinButton
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -16,9 +19,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.chrynan.navigation.ExperimentalNavigationApi
+import com.x256n.prtassistant.desktop.component.WinCheckbox
 import com.x256n.prtassistant.desktop.dialog.RegexDialog
 import com.x256n.prtassistant.desktop.navigation.Destinations
 import com.x256n.prtassistant.desktop.navigation.Navigator
@@ -146,35 +151,98 @@ fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>
                             .weight(1f)
                     ) {
                         itemsIndexed(state.storage.regexs.sortedBy { it.order }) { index, item ->
-                            Row(
-                                modifier = Modifier
-                                    .height(32.dp)
-                                    .fillMaxWidth()
-                                    .clickable { viewModel.onEvent(HomeEvent.RegexSelected(item, index)) }
-                                    .background(if (state.selectedIndex == index) Color.LightGray else Color.Transparent),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(checked = item.enabled, onCheckedChange = {
-                                    viewModel.onEvent(HomeEvent.EnabledClicked(item))
-                                })
-                                Text(
+                            if (state.itemToDelete == item) {
+                                Row(
                                     modifier = Modifier
-                                        .weight(1f),
-                                    text = item.name,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
+                                        .height(36.dp)
+                                        .padding(2.dp)
+                                        .fillMaxWidth()
+                                        .background(Color.Red.copy(alpha = 0.2f)),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
                                         modifier = Modifier
-                                            .border(border = BorderStroke(1.dp, Color.DarkGray))
-                                            .clickable { viewModel.onEvent(HomeEvent.DeleteClicked(item)) }
-                                            .size(30.dp),
-                                        contentAlignment = Alignment.Center
+                                            .padding(start = 5.dp)
+                                            .weight(1f),
+                                        text = item.name,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    WinButton(modifier = Modifier
+                                        .padding(bottom = 2.dp),
+                                        text = "Delete!",
+                                        onClick = {
+                                            viewModel.onEvent(HomeEvent.DeleteConfirmed(item))
+                                        }
+                                    )
+                                }
+                            } else {
+                                Row(
+                                    modifier = Modifier
+                                        .height(32.dp)
+                                        .fillMaxWidth()
+                                        .clickable { viewModel.onEvent(HomeEvent.RegexSelected(item, index)) }
+                                        .background(if (state.selectedIndex == index) Color.LightGray else Color.Transparent),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    WinCheckbox(isChecked = item.enabled, onCheckedChange = {
+                                        viewModel.onEvent(HomeEvent.EnabledClicked(item))
+                                    })
+                                    Text(
+                                        modifier = Modifier
+                                            .weight(1f),
+                                        text = item.name,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(end = 3.dp), verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
-                                            modifier = Modifier,
-                                            text = "D"
-                                        )
+                                        if (state.selectedIndex == index) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .height(30.dp)
+                                                    .padding(horizontal = 3.dp)
+                                            ) {
+                                                if (state.storage.regexs.size > 1) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .padding(1.dp)
+                                                    ) {
+                                                        if (index > 0) {
+                                                            Image(
+                                                                modifier = Modifier
+                                                                    .clickable { viewModel.onEvent(HomeEvent.UpClicked(item)) },
+                                                                painter = painterResource("images/arrow-up.png"),
+                                                                contentDescription = null
+                                                            )
+
+                                                        }
+                                                    }
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .padding(1.dp)
+                                                    ) {
+                                                        if (index < state.storage.regexs.size - 1) {
+                                                            Image(
+                                                                modifier = Modifier
+                                                                    .clickable { viewModel.onEvent(HomeEvent.DownClicked(item)) },
+                                                                painter = painterResource("images/arrow-down.png"),
+                                                                contentDescription = null
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            Image(
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .clickable { viewModel.onEvent(HomeEvent.DeleteClicked(item)) }
+                                                    .padding(2.dp),
+                                                painter = painterResource("images/cross.png"), contentDescription = null
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -183,28 +251,11 @@ fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>
                     Row {
                         WinButton(modifier = Modifier
                             .weight(1f),
-                            enabled = state.hasData,
                             onClick = {
-                                viewModel.onEvent(HomeEvent.UpClicked)
-                            }) {
-                            Text("UP")
-                        }
-                        Spacer(modifier = Modifier.size(4.dp))
-                        WinButton(modifier = Modifier
-                            .weight(1f),
-                            enabled = state.hasData,
-                            onClick = {
-                                viewModel.onEvent(HomeEvent.DownClicked)
-                            }) {
-                            Text("DOWN")
-                        }
-                        Spacer(modifier = Modifier.size(4.dp))
-                        WinButton(modifier = Modifier
-                            .weight(1f),
-                            onClick = {
+                                viewModel.onEvent(HomeEvent.RegexDialogShown)
                                 showRegexDialog.value = true
                             }) {
-                            Text("NEW")
+                            Text("CREATE RULE")
                         }
                     }
                 }

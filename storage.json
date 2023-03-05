@@ -1,14 +1,25 @@
 {
   "regexs": [
     {
-      "name": "\\d",
+      "name": "test",
       "order": 0,
-      "regex": "\\d+",
-      "replacement": "AAA",
-      "exampleSource": "asd333dfg",
+      "regex": "\\d+a",
+      "replacement": "AAAa",
+      "exampleSource": "",
       "caseInsensitive": true,
       "dotAll": true,
-      "multiline": true,
+      "multiline": false,
+      "enabled": true
+    },
+    {
+      "name": "sdf",
+      "order": 1,
+      "regex": "sdf",
+      "replacement": "",
+      "exampleSource": "",
+      "caseInsensitive": false,
+      "dotAll": false,
+      "multiline": false,
       "enabled": true
     }
   ]
