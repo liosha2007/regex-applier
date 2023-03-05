@@ -148,15 +148,15 @@ class HomeViewModel(
                 }
                 is HomeEvent.SaveRegexClicked -> {
                     val newItem = RegexModel(
-                        name = event.ruleName,
-                        order = null,
-                        regex = event.regex,
-                        replacement = event.replacement,
-                        exampleSource = event.exampleSource,
-                        isCaseInsensitive = event.isCaseInsensitive,
-                        isDotAll = event.isDotAll,
-                        isMultiline = event.isMultiline,
-                        isEnabled = true,
+                        name = event.regexModel.name,
+                        order = event.regexModel.order,
+                        regex = event.regexModel.regex,
+                        replacement = event.regexModel.replacement,
+                        exampleSource = event.regexModel.exampleSource,
+                        isCaseInsensitive = event.regexModel.isCaseInsensitive,
+                        isDotAll = event.regexModel.isDotAll,
+                        isMultiline = event.regexModel.isMultiline,
+                        isEnabled = event.regexModel.isEnabled,
                     )
                     val storage = if (newItem.order == null) {
                         stateValue.storage.copy(
@@ -183,10 +183,10 @@ class HomeViewModel(
                 }
                 is HomeEvent.RegexChanged -> {
                     detectTextSelectionRange(
-                        regex = event.regex,
-                        isCaseInsensitive = event.isCaseInsensitive,
-                        isDotAll = event.isDotAll,
-                        isMultiline = event.isMultiline
+                        regex = event.regexModel.regex,
+                        isCaseInsensitive = event.regexModel.isCaseInsensitive,
+                        isDotAll = event.regexModel.isDotAll,
+                        isMultiline = event.regexModel.isMultiline
                     )?.let { textRange ->
                         _state.value = stateValue.copy(
                             sourceText = stateValue.sourceText.copy(
@@ -194,6 +194,9 @@ class HomeViewModel(
                             )
                         )
                     }
+                }
+                is HomeEvent.EditRegexClicked -> {
+                    println("Editing ${event.item}")
                 }
                 is HomeEvent.ResetError -> {
                     _state.value = stateValue.copy(

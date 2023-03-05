@@ -1,10 +1,7 @@
 package com.x256n.prtassistant.desktop.screen.home
 
 import WinButton
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -32,6 +29,7 @@ import com.chrynan.navigation.ExperimentalNavigationApi
 import com.x256n.prtassistant.desktop.component.WinCheckbox
 import com.x256n.prtassistant.desktop.dialog.RegexDialog
 import com.x256n.prtassistant.desktop.dialog.TooltipDialog
+import com.x256n.prtassistant.desktop.model.RegexModel
 import com.x256n.prtassistant.desktop.navigation.Destinations
 import com.x256n.prtassistant.desktop.navigation.Navigator
 import kotlinx.coroutines.CoroutineScope
@@ -47,9 +45,8 @@ import kotlinx.coroutines.launch
 fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>) {
     val state by viewModel.state
 
-    val showRegexDialog = remember {
-        mutableStateOf(false)
-    }
+    val showRegexDialog = remember { mutableStateOf(false) }
+    val showRegexDialogRegexModel = remember { mutableStateOf(RegexModel.Empty) }
 
     if (!state.isLoading) {
         Column(
@@ -70,31 +67,24 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                     text = message
                 )
             }
-            RegexDialog(showRegexDialog.value, onCancel = {
-                showRegexDialog.value = false
-            }, onSave = { ruleName, regex, replacement, exampleSource, isCaseInsensitive, isDotAll, isMultiline ->
-                showRegexDialog.value = false
-                viewModel.onEvent(
-                    HomeEvent.SaveRegexClicked(
-                        ruleName,
-                        regex,
-                        replacement,
-                        exampleSource,
-                        isCaseInsensitive,
-                        isDotAll,
-                        isMultiline
-                    )
-                )
-            }, onRegexChanged = { regex, isCaseInsensitive, isDotAll, isMultiline ->
-                viewModel.onEvent(
-                    HomeEvent.RegexChanged(
-                        regex,
-                        isCaseInsensitive,
-                        isDotAll,
-                        isMultiline
-                    )
-                )
-            })
+            if (showRegexDialog.value) {
+                RegexDialog(
+                    regexModel = showRegexDialogRegexModel.value,
+                    dialogVisible = showRegexDialog.value,
+                    onCancel = {
+                        showRegexDialog.value = false
+                        showRegexDialogRegexModel.value = RegexModel.Empty
+                    }, onSave = { regexModel ->
+                        showRegexDialog.value = false
+                        showRegexDialogRegexModel.value = RegexModel.Empty
+
+                        viewModel.onEvent(HomeEvent.SaveRegexClicked(regexModel))
+                    }, onRegexChanged = { regexModel ->
+                        viewModel.onEvent(
+                            HomeEvent.RegexChanged(regexModel)
+                        )
+                    })
+            }
             Row(
                 modifier = Modifier
                     .padding(8.dp)
@@ -103,8 +93,9 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                     modifier = Modifier
                         .weight(1f)
                 ) {
-                    TextField(modifier = Modifier
-                        .fillMaxSize(),
+                    TextField(
+                        modifier = Modifier
+                            .fillMaxSize(),
                         value = state.sourceText,
                         placeholder = {
                             Text("Source text")
@@ -187,7 +178,17 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                                     modifier = Modifier
                                         .height(32.dp)
                                         .fillMaxWidth()
-                                        .clickable { viewModel.onEvent(HomeEvent.RegexSelected(item, index)) }
+                                        .combinedClickable(enabled = true,
+                                            onDoubleClick = {
+                                                viewModel.onEvent(HomeEvent.EditRegexClicked(item))
+
+                                                showRegexDialogRegexModel.value = item
+
+                                                showRegexDialog.value = true
+                                            },
+                                            onClick = {
+                                                viewModel.onEvent(HomeEvent.RegexSelected(item, index))
+                                            })
                                         .background(if (state.selectedIndex == index) Color.LightGray else Color.Transparent),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {

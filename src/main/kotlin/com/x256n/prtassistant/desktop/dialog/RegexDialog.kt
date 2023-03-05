@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogState
 import com.x256n.prtassistant.desktop.component.WinCheckbox
+import com.x256n.prtassistant.desktop.model.RegexModel
 import java.awt.Dimension
 
 @ExperimentalMaterialApi
@@ -26,37 +27,14 @@ import java.awt.Dimension
 @Composable
 fun RegexDialog(
     dialogVisible: Boolean,
-    ruleName: String = "",
-    regex: String = "",
-    replacement: String = "",
-    exampleSource: String = "",
-    isCaseInsensitive: Boolean = false,
-    isDotAll: Boolean = false,
-    isMultiline: Boolean = false,
+    regexModel: RegexModel = RegexModel.Empty,
     onCancel: () -> Unit,
     onSave: (
-        ruleName: String,
-        regex: String,
-        replacement: String,
-        exampleSource: String,
-        isCaseInsensitive: Boolean,
-        isDotAll: Boolean,
-        isMultiline: Boolean
+        regexModel: RegexModel
     ) -> Unit,
-    onRegexChanged: (
-        regex: String,
-        isCaseInsensitive: Boolean,
-        isDotAll: Boolean,
-        isMultiline: Boolean
-    ) -> Unit
+    onRegexChanged: (regexModel: RegexModel) -> Unit
 ) {
-    val ruleNameValue = remember { mutableStateOf(ruleName) }
-    val regexValue = remember { mutableStateOf(regex) }
-    val replacementValue = remember { mutableStateOf(replacement) }
-    val exampleSourceValue = remember { mutableStateOf(exampleSource) }
-    val isCaseInsensitiveValue = remember { mutableStateOf(isCaseInsensitive) }
-    val isDotAllValue = remember { mutableStateOf(isDotAll) }
-    val isMultilineValue = remember { mutableStateOf(isMultiline) }
+    val regexModelValue = remember { mutableStateOf(regexModel.copy()) }
 
     val ruleNameColor = remember { mutableStateOf(Color.Black) }
     val regexColor = remember { mutableStateOf(Color.Black) }
@@ -94,9 +72,9 @@ fun RegexDialog(
                 WinTextField(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    text = ruleNameValue.value
+                    text = regexModelValue.value.name
                 ) {
-                    ruleNameValue.value = it
+                    regexModelValue.value = regexModelValue.value.copy(name = it)
                     ruleNameColor.value = Color.Black
                 }
 
@@ -113,18 +91,13 @@ fun RegexDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    text = regexValue.value,
+                    text = regexModelValue.value.regex,
                     singleLine = false,
                     maxLines = 3
                 ) {
-                    regexValue.value = it
+                    regexModelValue.value = regexModelValue.value.copy(regex = it)
                     regexColor.value = Color.Black
-                    onRegexChanged(
-                        regexValue.value,
-                        isCaseInsensitiveValue.value,
-                        isDotAllValue.value,
-                        isMultilineValue.value,
-                    )
+                    onRegexChanged(regexModelValue.value)
                 }
 
                 Spacer(modifier = Modifier.padding(5.dp))
@@ -139,11 +112,11 @@ fun RegexDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    text = replacementValue.value,
+                    text = regexModelValue.value.replacement,
                     singleLine = false,
                     maxLines = 3
                 ) {
-                    replacementValue.value = it
+                    regexModelValue.value = regexModelValue.value.copy(replacement = it)
                 }
 
                 Spacer(modifier = Modifier.padding(5.dp))
@@ -158,26 +131,21 @@ fun RegexDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    text = exampleSourceValue.value,
+                    text = regexModelValue.value.exampleSource,
                     singleLine = false,
                     maxLines = 3
                 ) {
-                    exampleSourceValue.value = it
+                    regexModelValue.value = regexModelValue.value.copy(exampleSource = it)
                 }
 
                 Spacer(modifier = Modifier.padding(5.dp))
 
                 WinCheckbox(
                     text = "Case insensitive",
-                    isChecked = isCaseInsensitiveValue.value,
+                    isChecked = regexModelValue.value.isCaseInsensitive,
                     onCheckedChange = {
-                        isCaseInsensitiveValue.value = it
-                        onRegexChanged(
-                            regexValue.value,
-                            isCaseInsensitiveValue.value,
-                            isDotAllValue.value,
-                            isMultilineValue.value,
-                        )
+                        regexModelValue.value = regexModelValue.value.copy(isCaseInsensitive = it)
+                        onRegexChanged(regexModelValue.value)
                     }
                 )
 
@@ -185,15 +153,10 @@ fun RegexDialog(
 
                 WinCheckbox(
                     text = "Dot all",
-                    isChecked = isDotAllValue.value,
+                    isChecked = regexModelValue.value.isDotAll,
                     onCheckedChange = {
-                        isDotAllValue.value = it
-                        onRegexChanged(
-                            regexValue.value,
-                            isCaseInsensitiveValue.value,
-                            isDotAllValue.value,
-                            isMultilineValue.value,
-                        )
+                        regexModelValue.value = regexModelValue.value.copy(isDotAll = it)
+                        onRegexChanged(regexModelValue.value)
                     }
                 )
 
@@ -201,15 +164,10 @@ fun RegexDialog(
 
                 WinCheckbox(
                     text = "Multiline",
-                    isChecked = isMultilineValue.value,
+                    isChecked = regexModelValue.value.isMultiline,
                     onCheckedChange = {
-                        isMultilineValue.value = it
-                        onRegexChanged(
-                            regexValue.value,
-                            isCaseInsensitiveValue.value,
-                            isDotAllValue.value,
-                            isMultilineValue.value,
-                        )
+                        regexModelValue.value = regexModelValue.value.copy(isMultiline = it)
+                        onRegexChanged(regexModelValue.value)
                     }
                 )
 
@@ -237,20 +195,12 @@ fun RegexDialog(
                         .weight(1f),
                     text = "Save",
                     onClick = {
-                        if (ruleNameValue.value.isBlank()) {
+                        if (regexModelValue.value.name.isBlank()) {
                             ruleNameColor.value = Color.Red
-                        } else if (regexValue.value.isBlank()) {
+                        } else if (regexModelValue.value.regex.isBlank()) {
                             regexColor.value = Color.Red
                         } else {
-                            onSave(
-                                ruleNameValue.value,
-                                regexValue.value,
-                                replacementValue.value,
-                                exampleSourceValue.value,
-                                isCaseInsensitiveValue.value,
-                                isDotAllValue.value,
-                                isMultilineValue.value
-                            )
+                            onSave(regexModelValue.value)
                         }
                     }
                 )

@@ -16,4 +16,8 @@ data class RegexModel(
     val isDotAll: Boolean,
     val isMultiline: Boolean,
     val isEnabled: Boolean,
-)
+) {
+    companion object {
+        val Empty get() = RegexModel("", null, "", "", "", false, false, false, true).copy()
+    }
+}
