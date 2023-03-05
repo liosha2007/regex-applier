@@ -1,4 +1,4 @@
-package com.x256n.prtassistant.desktop.dialog
+package com.x256n.regexapplier.desktop.dialog
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Row

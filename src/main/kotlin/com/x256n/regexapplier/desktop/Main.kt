@@ -1,4 +1,4 @@
-package com.x256n.prtassistant.desktop
+package com.x256n.regexapplier.desktop
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,8 +12,8 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.chrynan.navigation.ExperimentalNavigationApi
-import com.x256n.prtassistant.desktop.di.ModulesInjection
-import com.x256n.prtassistant.desktop.navigation.NavigationComponent
+import com.x256n.regexapplier.desktop.di.ModulesInjection
+import com.x256n.regexapplier.desktop.navigation.NavigationComponent
 import org.koin.core.context.startKoin
 import org.koin.core.logger.PrintLogger
 import java.awt.Dimension
@@ -24,7 +24,6 @@ import java.awt.Dimension
 fun main() {
 
     configureKoin()
-
     application {
         val state = rememberWindowState(
             width = 400.dp,
@@ -33,7 +32,7 @@ fun main() {
         )
         Window(
             onCloseRequest = ::exitApplication,
-            title = "Porting Assistant",
+            title = "Regex applier (by liosha) v1.0.0",
 //        icon = painterResource("icon.png"),
             resizable = true,
             state = state

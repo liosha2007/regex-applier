@@ -8,5 +8,5 @@ pluginManagement {
     }
 }
 
-rootProject.name = "prt-assistant-desktop"
+rootProject.name = "regex-applier-desktop"
 

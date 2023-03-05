@@ -1,7 +1,7 @@
-package com.x256n.prtassistant.desktop.screen.home
+package com.x256n.regexapplier.desktop.screen.home
 
 import androidx.compose.ui.text.input.TextFieldValue
-import com.x256n.prtassistant.desktop.model.RegexModel
+import com.x256n.regexapplier.desktop.model.RegexModel
 
 sealed class HomeEvent {
     data class SourceChanged(val value: TextFieldValue) : HomeEvent()

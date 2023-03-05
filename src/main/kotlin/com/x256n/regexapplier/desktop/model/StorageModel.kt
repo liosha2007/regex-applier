@@ -1,4 +1,4 @@
-package com.x256n.prtassistant.desktop.model
+package com.x256n.regexapplier.desktop.model
 
 @kotlinx.serialization.Serializable
 data class StorageModel(

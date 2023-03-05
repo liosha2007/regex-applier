@@ -1,4 +1,4 @@
-package com.x256n.prtassistant.desktop.navigation
+package com.x256n.regexapplier.desktop.navigation
 
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
@@ -9,8 +9,8 @@ import com.chrynan.navigation.ExperimentalNavigationApi
 import com.chrynan.navigation.compose.ComposeNavigatorByKey
 import com.chrynan.navigation.compose.NavContainer
 import com.chrynan.navigation.compose.rememberNavigatorByKey
-import com.x256n.prtassistant.desktop.screen.home.HomeScreen
-import com.x256n.prtassistant.desktop.screen.home.HomeViewModel
+import com.x256n.regexapplier.desktop.screen.home.HomeScreen
+import com.x256n.regexapplier.desktop.screen.home.HomeViewModel
 import org.koin.java.KoinJavaComponent.inject
 
 typealias Navigator<T> = ComposeNavigatorByKey<T, Destinations>

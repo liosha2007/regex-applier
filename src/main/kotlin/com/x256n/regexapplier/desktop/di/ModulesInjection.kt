@@ -1,6 +1,6 @@
-package com.x256n.prtassistant.desktop.di
+package com.x256n.regexapplier.desktop.di
 
-import com.x256n.prtassistant.desktop.screen.home.HomeViewModel
+import com.x256n.regexapplier.desktop.screen.home.HomeViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 

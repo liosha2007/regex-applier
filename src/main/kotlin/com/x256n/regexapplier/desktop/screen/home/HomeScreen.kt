@@ -1,4 +1,4 @@
-package com.x256n.prtassistant.desktop.screen.home
+package com.x256n.regexapplier.desktop.screen.home
 
 import WinButton
 import androidx.compose.foundation.*
@@ -26,12 +26,12 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberDialogState
 import com.chrynan.navigation.ExperimentalNavigationApi
-import com.x256n.prtassistant.desktop.component.WinCheckbox
-import com.x256n.prtassistant.desktop.dialog.RegexDialog
-import com.x256n.prtassistant.desktop.dialog.TooltipDialog
-import com.x256n.prtassistant.desktop.model.RegexModel
-import com.x256n.prtassistant.desktop.navigation.Destinations
-import com.x256n.prtassistant.desktop.navigation.Navigator
+import com.x256n.regexapplier.desktop.component.WinCheckbox
+import com.x256n.regexapplier.desktop.dialog.RegexDialog
+import com.x256n.regexapplier.desktop.dialog.TooltipDialog
+import com.x256n.regexapplier.desktop.model.RegexModel
+import com.x256n.regexapplier.desktop.navigation.Destinations
+import com.x256n.regexapplier.desktop.navigation.Navigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -216,7 +216,7 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                                                 x = windowState.position.x + offset.x.dp - tooltipState.size.width + 20.dp,
                                                 y = windowState.position.y + offset.y.dp + 55.dp
                                             )
-                                            println("Tooltip position = x: ${tooltipState.position.x}, y: ${tooltipState.position.y}")
+//                                            println("Tooltip position = x: ${tooltipState.position.x}, y: ${tooltipState.position.y}")
                                         }
                                         .pointerMoveFilter(
                                             onEnter = {

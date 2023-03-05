@@ -1,14 +1,14 @@
 @file:OptIn(ExperimentalSerializationApi::class)
 
-package com.x256n.prtassistant.desktop.screen.home
+package com.x256n.regexapplier.desktop.screen.home
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import com.x256n.prtassistant.desktop.model.RegexModel
-import com.x256n.prtassistant.desktop.model.StorageModel
-import com.x256n.prtassistant.desktop.navigation.Destinations
+import com.x256n.regexapplier.desktop.model.RegexModel
+import com.x256n.regexapplier.desktop.model.StorageModel
+import com.x256n.regexapplier.desktop.navigation.Destinations
 import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json

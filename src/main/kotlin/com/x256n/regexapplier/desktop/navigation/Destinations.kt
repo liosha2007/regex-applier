@@ -1,4 +1,4 @@
-package com.x256n.prtassistant.desktop.navigation
+package com.x256n.regexapplier.desktop.navigation
 
 import com.chrynan.navigation.NavigationContext
 

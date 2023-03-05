@@ -1,4 +1,4 @@
-package com.x256n.prtassistant.desktop.component
+package com.x256n.regexapplier.desktop.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row

@@ -8,8 +8,8 @@ plugins {
     kotlin("plugin.serialization") version "1.5.31"
 }
 
-group = "com.x256n.prtassistant.desktop"
-version = "1.0.0"
+group = "com.x256n.regexapplier.desktop"
+version = "1.0.0" // UPDATE version in Main.kt as well
 
 repositories {
     google()
@@ -41,11 +41,11 @@ tasks.withType<KotlinCompile> {
 
 compose.desktop {
     application {
-        mainClass = "com.x256n.prtassistant.desktop.MainKt"
+        mainClass = "com.x256n.regexapplier.desktop.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "prt-assistant-desktop"
-            packageVersion = "1.0.0"
+            packageName = "regex-applier-desktop"
+            packageVersion = project.version.toString()
         }
     }
 }

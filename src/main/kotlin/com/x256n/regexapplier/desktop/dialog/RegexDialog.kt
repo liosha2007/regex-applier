@@ -1,4 +1,4 @@
-package com.x256n.prtassistant.desktop.dialog
+package com.x256n.regexapplier.desktop.dialog
 
 import WinButton
 import WinTextField
@@ -17,8 +17,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogState
-import com.x256n.prtassistant.desktop.component.WinCheckbox
-import com.x256n.prtassistant.desktop.model.RegexModel
+import com.x256n.regexapplier.desktop.component.WinCheckbox
+import com.x256n.regexapplier.desktop.model.RegexModel
 import java.awt.Dimension
 
 @ExperimentalMaterialApi
