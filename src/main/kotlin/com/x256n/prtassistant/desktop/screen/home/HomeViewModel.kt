@@ -87,7 +87,7 @@ class HomeViewModel(
                 is HomeEvent.EnabledClicked -> {
                     val regexs = stateValue.storage.regexs.toMutableList().apply {
                         remove(event.item)
-                        add(event.item.copy(enabled = !event.item.enabled))
+                        add(event.item.copy(isEnabled = !event.item.isEnabled))
                     }.sortedBy { it.order }
                     _state.value = stateValue.copy(
                         itemToDelete = null, // Reset deletion confirmation
@@ -153,10 +153,10 @@ class HomeViewModel(
                         regex = event.regex,
                         replacement = event.replacement,
                         exampleSource = event.exampleSource,
-                        caseInsensitive = event.isCaseInsensitive,
-                        dotAll = event.isDotAll,
-                        multiline = event.isMultiline,
-                        enabled = true,
+                        isCaseInsensitive = event.isCaseInsensitive,
+                        isDotAll = event.isDotAll,
+                        isMultiline = event.isMultiline,
+                        isEnabled = true,
                     )
                     val storage = if (newItem.order == null) {
                         stateValue.storage.copy(
@@ -278,8 +278,8 @@ class HomeViewModel(
         withContext(Dispatchers.Default) {
             replaceJob = async {
                 var processText = _state.value.sourceText.text
-                _state.value.storage.regexs.filter { it.enabled }.sortedBy { it.order }.forEach {
-                    val pattern = compilePattern(it.regex, it.caseInsensitive, it.dotAll, it.multiline)
+                _state.value.storage.regexs.filter { it.isEnabled }.sortedBy { it.order }.forEach {
+                    val pattern = compilePattern(it.regex, it.isCaseInsensitive, it.isDotAll, it.isMultiline)
                     processText = pattern.matcher(processText).replaceAll(it.replacement)
                 }
                 _state.value = _state.value.copy(

@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogState
 import com.x256n.prtassistant.desktop.component.WinCheckbox
 import java.awt.Dimension
 
@@ -64,12 +65,12 @@ fun RegexDialog(
         undecorated = false,
         resizable = true,
         visible = dialogVisible,
+        state = DialogState(width = 240.dp, height = 400.dp),
         onCloseRequest = {
             onCancel()
         }
     ) {
         this.window.minimumSize = Dimension(240, 400)
-        this.window.size = this.window.minimumSize
 
         Column(
             modifier = Modifier

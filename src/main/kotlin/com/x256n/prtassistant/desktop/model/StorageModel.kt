@@ -12,8 +12,8 @@ data class RegexModel(
     val regex: String,
     val replacement: String,
     val exampleSource: String,
-    val caseInsensitive: Boolean,
-    val dotAll: Boolean,
-    val multiline: Boolean,
-    val enabled: Boolean,
+    val isCaseInsensitive: Boolean,
+    val isDotAll: Boolean,
+    val isMultiline: Boolean,
+    val isEnabled: Boolean,
 )

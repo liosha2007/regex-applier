@@ -19,12 +19,19 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerMoveFilter
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowState
+import androidx.compose.ui.window.rememberDialogState
 import com.chrynan.navigation.ExperimentalNavigationApi
 import com.x256n.prtassistant.desktop.component.WinCheckbox
 import com.x256n.prtassistant.desktop.dialog.RegexDialog
+import com.x256n.prtassistant.desktop.dialog.TooltipDialog
 import com.x256n.prtassistant.desktop.navigation.Destinations
 import com.x256n.prtassistant.desktop.navigation.Navigator
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +44,7 @@ import kotlinx.coroutines.launch
 @ExperimentalComposeUiApi
 @ExperimentalNavigationApi
 @Composable
-fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>) {
+fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>) {
     val state by viewModel.state
 
     val showRegexDialog = remember {
@@ -184,9 +191,44 @@ fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>
                                         .background(if (state.selectedIndex == index) Color.LightGray else Color.Transparent),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    WinCheckbox(isChecked = item.enabled, onCheckedChange = {
-                                        viewModel.onEvent(HomeEvent.EnabledClicked(item))
-                                    })
+                                    val isTooltipShown = remember { mutableStateOf(false) }
+                                    val tooltipState = rememberDialogState(WindowPosition.Absolute(0.dp, 0.dp))
+                                    TooltipDialog(
+                                        dialogVisible = isTooltipShown.value && item.exampleSource.isNotBlank(),
+                                        state = tooltipState,
+                                        regex = item.regex,
+                                        replacement = item.replacement,
+                                        exampleSource = item.exampleSource,
+                                        isCaseInsensitive = item.isCaseInsensitive,
+                                        isDotAll = item.isDotAll,
+                                        isMultiline = item.isMultiline,
+                                        onCloseRequest = {
+                                            isTooltipShown.value = false
+                                        }
+                                    )
+
+                                    WinCheckbox(modifier = Modifier
+                                        .onGloballyPositioned { coordinates ->
+                                            val offset = coordinates.positionInWindow()
+
+                                            tooltipState.position = WindowPosition(
+                                                x = windowState.position.x + offset.x.dp - tooltipState.size.width + 20.dp,
+                                                y = windowState.position.y + offset.y.dp + 55.dp
+                                            )
+                                            println("Tooltip position = x: ${tooltipState.position.x}, y: ${tooltipState.position.y}")
+                                        }
+                                        .pointerMoveFilter(
+                                            onEnter = {
+                                                isTooltipShown.value = true
+                                                false
+                                            },
+                                            onExit = {
+                                                isTooltipShown.value = false
+                                                false
+                                            }),
+                                        isChecked = item.isEnabled, onCheckedChange = {
+                                            viewModel.onEvent(HomeEvent.EnabledClicked(item))
+                                        })
                                     Text(
                                         modifier = Modifier
                                             .weight(1f),
