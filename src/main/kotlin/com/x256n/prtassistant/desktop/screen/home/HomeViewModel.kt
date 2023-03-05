@@ -6,6 +6,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.x256n.prtassistant.desktop.model.RegexModel
 import com.x256n.prtassistant.desktop.model.StorageModel
 import com.x256n.prtassistant.desktop.navigation.Destinations
 import kotlinx.coroutines.*
@@ -50,13 +51,7 @@ class HomeViewModel(
                 is HomeEvent.RegexSelected -> {
                     _state.value = stateValue.copy(
                         selectedIndex = event.index,
-                        order = event.value.order,
-                        name = event.value.name,
-                        regex = event.value.regex,
-                        replacement = event.value.replacement,
-                        caseInsensitive = event.value.caseInsensitive,
-                        dotAll = event.value.dotAll,
-                        multiline = event.value.multiline,
+                        order = event.value.order
                     )
                 }
                 is HomeEvent.DeleteClicked -> {
@@ -73,37 +68,11 @@ class HomeViewModel(
                     )
                     saveStorage()
                 }
-                is HomeEvent.NameChanged -> {
+                is HomeEvent.ResultFocused -> {
                     _state.value = stateValue.copy(
-                        name = event.value
-                    )
-                }
-                is HomeEvent.RegexChanged -> {
-                    _state.value = stateValue.copy(
-                        regex = event.value,
                         resultText = stateValue.resultText.copy(
-                            selection = detectTextSelectionRange(event.value)
+                            selection = TextRange(0, _state.value.resultText.text.length)
                         )
-                    )
-                }
-                is HomeEvent.ReplacementChanged -> {
-                    _state.value = stateValue.copy(
-                        replacement = event.value
-                    )
-                }
-                is HomeEvent.DotAllChanged -> {
-                    _state.value = stateValue.copy(
-                        dotAll = event.value
-                    )
-                }
-                is HomeEvent.MultilineChanged -> {
-                    _state.value = stateValue.copy(
-                        multiline = event.value
-                    )
-                }
-                is HomeEvent.CaseInsensitiveChanged -> {
-                    _state.value = stateValue.copy(
-                        caseInsensitive = event.value
                     )
                 }
                 is HomeEvent.EnabledClicked -> {
@@ -165,19 +134,18 @@ class HomeViewModel(
                         applyChanges()
                     }
                 }
-                is HomeEvent.AddRegexClicked -> {
-                    _state.value = stateValue.copy(
-                        order = null,
-                        name = "",
-                        regex = "",
-                        replacement = "",
-                        caseInsensitive = false,
-                        dotAll = false,
-                        multiline = false,
-                    )
-                }
                 is HomeEvent.SaveRegexClicked -> {
-                    val newItem = stateValue.createItem()
+                    val newItem = RegexModel(
+                        name = event.ruleName,
+                        order = null,
+                        regex = event.regex,
+                        replacement = event.replacement,
+                        exampleSource = event.exampleSource,
+                        caseInsensitive = event.isCaseInsensitive,
+                        dotAll = event.isDotAll,
+                        multiline = event.isMultiline,
+                        enabled = true,
+                    )
                     val storage = if (newItem.order == null) {
                         stateValue.storage.copy(
                             regexs = stateValue.storage.regexs.toMutableList().apply {
@@ -197,23 +165,23 @@ class HomeViewModel(
                         storage = storage,
                         selectedIndex = storage.regexs.indexOf(addedItem),
                         order = addedItem.order,
-                        name = addedItem.name,
-                        regex = addedItem.regex,
-                        replacement = addedItem.replacement,
-                        caseInsensitive = addedItem.caseInsensitive,
-                        dotAll = addedItem.dotAll,
-                        multiline = addedItem.multiline,
                     )
                     saveStorage()
                     applyChanges()
                 }
-                is HomeEvent.ExpandedChanged -> {
-                    _state.value = stateValue.copy(
-                        storage = stateValue.storage.copy(
-                            expanded = !stateValue.storage.expanded
+                is HomeEvent.RegexChanged -> {
+                    detectTextSelectionRange(
+                        regex = event.regex,
+                        isCaseInsensitive = event.isCaseInsensitive,
+                        isDotAll = event.isDotAll,
+                        isMultiline = event.isMultiline
+                    )?.let { textRange ->
+                        _state.value = stateValue.copy(
+                            sourceText = stateValue.sourceText.copy(
+                                selection = textRange
+                            )
                         )
-                    )
-                    saveStorage()
+                    }
                 }
                 is HomeEvent.ResetError -> {
                     _state.value = stateValue.copy(
@@ -224,23 +192,36 @@ class HomeViewModel(
         }
     }
 
-    private fun detectTextSelectionRange(value: String): TextRange {
-        if (value.isNotBlank()) {
+    private fun detectTextSelectionRange(
+        regex: String,
+        isCaseInsensitive: Boolean,
+        isDotAll: Boolean,
+        isMultiline: Boolean
+    ): TextRange? {
+        if (regex.isNotBlank()) {
             val resultText = _state.value.resultText.text
-            val resultCursor = _state.value.sourceText.selection.start
+            val resultCursor = _state.value.resultText.selection.start
             try {
-                Regex(value).find(resultText)?.let { found ->
-                    var start = resultText.indexOf(found.value, startIndex = resultCursor)
+                val pattern = compilePattern(
+                    regex,
+                    isCaseInsensitive,
+                    isDotAll,
+                    isMultiline
+                )
+                val matcher = pattern.matcher(resultText)
+                if (matcher.find()) {
+                    val found = matcher.group()
+                    var start = resultText.indexOf(found, startIndex = resultCursor)
                     if (start == -1) {
-                        start = resultText.indexOf(found.value)
+                        start = resultText.indexOf(found)
                     }
-                    return TextRange(start, start + found.value.length)
+                    return TextRange(start, start + found.length)
                 }
-            } catch (e: PatternSyntaxException){
+            } catch (e: PatternSyntaxException) {
                 // Entering not finished
             }
         }
-        return TextRange(0, 0)
+        return null
     }
 
     private fun saveStorage() {
@@ -271,12 +252,6 @@ class HomeViewModel(
                 _state.value = _state.value.copy(
                     storage = storage,
                     order = _state.value.selectedItem.order,
-                    name = _state.value.selectedItem.name,
-                    regex = _state.value.selectedItem.regex,
-                    replacement = _state.value.selectedItem.replacement,
-                    caseInsensitive = _state.value.selectedItem.caseInsensitive,
-                    dotAll = _state.value.selectedItem.dotAll,
-                    multiline = _state.value.selectedItem.multiline,
                 )
             }
         }
@@ -287,12 +262,7 @@ class HomeViewModel(
             replaceJob = async {
                 var processText = _state.value.sourceText.text
                 _state.value.storage.regexs.filter { it.enabled }.sortedBy { it.order }.forEach {
-                    var mode = 0
-                    if (it.caseInsensitive) mode = mode or Pattern.CASE_INSENSITIVE
-                    if (it.dotAll) mode = mode or Pattern.DOTALL
-                    if (it.multiline) mode = mode or Pattern.MULTILINE
-
-                    val pattern = Pattern.compile(it.regex, mode)
+                    val pattern = compilePattern(it.regex, it.caseInsensitive, it.dotAll, it.multiline)
                     processText = pattern.matcher(processText).replaceAll(it.replacement)
                 }
                 _state.value = _state.value.copy(
@@ -308,5 +278,14 @@ class HomeViewModel(
                 )
             }
         }
+    }
+
+    private fun compilePattern(regex: String, caseInsensitive: Boolean, dotAll: Boolean, multiline: Boolean): Pattern {
+        var mode = 0
+        if (caseInsensitive) mode = mode or Pattern.CASE_INSENSITIVE
+        if (dotAll) mode = mode or Pattern.DOTALL
+        if (multiline) mode = mode or Pattern.MULTILINE
+
+        return Pattern.compile(regex, mode)
     }
 }

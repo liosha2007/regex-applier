@@ -3,9 +3,13 @@ package com.x256n.prtassistant.desktop
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.MaterialTheme
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPosition
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import com.chrynan.navigation.ExperimentalNavigationApi
 import com.x256n.prtassistant.desktop.di.ModulesInjection
@@ -25,8 +29,14 @@ fun main() {
             onCloseRequest = ::exitApplication,
             title = "Porting Assistant",
 //        icon = painterResource("icon.png"),
-            resizable = true
+            resizable = true,
+            state = WindowState(
+                width = 400.dp,
+                height = 680.dp,
+                position = WindowPosition.Aligned(Alignment.Center)
+            )
         ) {
+            this.window.minimumSize = Dimension(640, 480)
             this.window.size = Dimension(1024, 680)
             MaterialTheme {
                 Column {

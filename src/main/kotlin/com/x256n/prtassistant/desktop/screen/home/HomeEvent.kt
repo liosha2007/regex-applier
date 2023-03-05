@@ -8,22 +8,28 @@ sealed class HomeEvent {
     data class RegexSelected(val value: RegexModel, val index: Int) : HomeEvent()
     data class DeleteClicked(val value: RegexModel) : HomeEvent()
 
-    data class NameChanged(val value: String) : HomeEvent()
-    data class RegexChanged(val value: String) : HomeEvent()
-    data class ReplacementChanged(val value: String) : HomeEvent()
-
-    data class CaseInsensitiveChanged(val value: Boolean) : HomeEvent()
-    data class DotAllChanged(val value: Boolean) : HomeEvent()
-    data class MultilineChanged(val value: Boolean) : HomeEvent()
+    object ResultFocused : HomeEvent()
 
     data class EnabledClicked(val item: RegexModel) : HomeEvent()
 
     object UpClicked : HomeEvent()
     object DownClicked : HomeEvent()
-    object AddRegexClicked : HomeEvent()
-    object SaveRegexClicked : HomeEvent()
+    data class SaveRegexClicked(
+        val ruleName: String,
+        val regex: String,
+        val replacement: String,
+        val exampleSource: String,
+        val isCaseInsensitive: Boolean,
+        val isDotAll: Boolean,
+        val isMultiline: Boolean
+    ) : HomeEvent()
 
-    object ExpandedChanged : HomeEvent()
+    data class RegexChanged(
+        val regex: String,
+        val isCaseInsensitive: Boolean,
+        val isDotAll: Boolean,
+        val isMultiline: Boolean
+    ) : HomeEvent()
 
     object ResetError : HomeEvent()
 }

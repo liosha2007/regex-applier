@@ -1,1 +1,15 @@
-{"regexs":[{"name":"asd","order":0,"regex":"aaa","replacement":"sss","caseInsensitive":false,"dotAll":false,"multiline":false,"enabled":true}]}
+{
+  "regexs": [
+    {
+      "name": "\\d",
+      "order": 0,
+      "regex": "\\d+",
+      "replacement": "AAA",
+      "exampleSource": "asd333dfg",
+      "caseInsensitive": true,
+      "dotAll": true,
+      "multiline": true,
+      "enabled": true
+    }
+  ]
+}

@@ -1,9 +1,7 @@
 package com.x256n.prtassistant.desktop.screen.home
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import WinButton
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -16,11 +14,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.chrynan.navigation.ExperimentalNavigationApi
+import com.x256n.prtassistant.desktop.dialog.RegexDialog
 import com.x256n.prtassistant.desktop.navigation.Destinations
 import com.x256n.prtassistant.desktop.navigation.Navigator
 import kotlinx.coroutines.CoroutineScope
@@ -28,11 +27,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@ExperimentalMaterialApi
+@OptIn(ExperimentalFoundationApi::class)
 @ExperimentalComposeUiApi
 @ExperimentalNavigationApi
 @Composable
 fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>) {
     val state by viewModel.state
+
+    val showRegexDialog = remember {
+        mutableStateOf(false)
+    }
 
     if (!state.isLoading) {
         Column(
@@ -53,6 +58,31 @@ fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>
                     text = message
                 )
             }
+            RegexDialog(showRegexDialog.value, onCancel = {
+                showRegexDialog.value = false
+            }, onSave = { ruleName, regex, replacement, exampleSource, isCaseInsensitive, isDotAll, isMultiline ->
+                showRegexDialog.value = false
+                viewModel.onEvent(
+                    HomeEvent.SaveRegexClicked(
+                        ruleName,
+                        regex,
+                        replacement,
+                        exampleSource,
+                        isCaseInsensitive,
+                        isDotAll,
+                        isMultiline
+                    )
+                )
+            }, onRegexChanged = { regex, isCaseInsensitive, isDotAll, isMultiline ->
+                viewModel.onEvent(
+                    HomeEvent.RegexChanged(
+                        regex,
+                        isCaseInsensitive,
+                        isDotAll,
+                        isMultiline
+                    )
+                )
+            })
             Row(
                 modifier = Modifier
                     .padding(8.dp)
@@ -78,7 +108,12 @@ fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>
                         .weight(1f)
                 ) {
                     TextField(modifier = Modifier
-                        .fillMaxSize(),
+                        .fillMaxSize()
+                        .onFocusChanged {
+                            if (it.hasFocus) {
+                                viewModel.onEvent(HomeEvent.ResultFocused)
+                            }
+                        },
                         value = state.resultText,
                         placeholder = {
                             Text("Result text")
@@ -145,72 +180,8 @@ fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>
                             }
                         }
                     }
-                    Button(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp),
-                        onClick = {
-                            viewModel.onEvent(HomeEvent.ExpandedChanged)
-                        }) {}
-                    if (state.storage.expanded || !state.hasData) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        ) {
-                            TextField(modifier = Modifier
-                                .fillMaxWidth(),
-                                value = state.name, placeholder = {
-                                Text(text = "Name")
-                            }, onValueChange = {
-                                viewModel.onEvent(HomeEvent.NameChanged(it))
-                            })
-                            TextField(modifier = Modifier
-                                .fillMaxWidth(),
-                                value = state.regex, placeholder = {
-                                Text(text = "Regex")
-                            }, onValueChange = {
-                                viewModel.onEvent(HomeEvent.RegexChanged(it))
-                            })
-                            TextField(modifier = Modifier
-                                .fillMaxWidth(),
-                                value = state.replacement, placeholder = {
-                                Text(text = "Replacement")
-                            }, onValueChange = {
-                                viewModel.onEvent(HomeEvent.ReplacementChanged(it))
-                            })
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(checked = state.caseInsensitive, onCheckedChange = {
-                                    viewModel.onEvent(HomeEvent.CaseInsensitiveChanged(!state.caseInsensitive))
-                                })
-                                Text(
-                                    modifier = Modifier
-                                        .clickable { viewModel.onEvent(HomeEvent.CaseInsensitiveChanged(!state.caseInsensitive)) },
-                                    text = "Case insensitive"
-                                )
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(checked = state.dotAll, onCheckedChange = {
-                                    viewModel.onEvent(HomeEvent.DotAllChanged(!state.dotAll))
-                                })
-                                Text(
-                                    modifier = Modifier
-                                        .clickable { viewModel.onEvent(HomeEvent.DotAllChanged(!state.dotAll)) },
-                                    text = "Dot all"
-                                )
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(checked = state.multiline, onCheckedChange = {
-                                    viewModel.onEvent(HomeEvent.DotAllChanged(!state.multiline))
-                                })
-                                Text(
-                                    modifier = Modifier
-                                        .clickable { viewModel.onEvent(HomeEvent.MultilineChanged(!state.multiline)) },
-                                    text = "Multiline"
-                                )
-                            }
-                        }
-                    }
                     Row {
-                        Button(modifier = Modifier
+                        WinButton(modifier = Modifier
                             .weight(1f),
                             enabled = state.hasData,
                             onClick = {
@@ -219,7 +190,7 @@ fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>
                             Text("UP")
                         }
                         Spacer(modifier = Modifier.size(4.dp))
-                        Button(modifier = Modifier
+                        WinButton(modifier = Modifier
                             .weight(1f),
                             enabled = state.hasData,
                             onClick = {
@@ -227,22 +198,13 @@ fun HomeScreen(viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>
                             }) {
                             Text("DOWN")
                         }
-                    }
-                    Row {
-                        Button(modifier = Modifier
+                        Spacer(modifier = Modifier.size(4.dp))
+                        WinButton(modifier = Modifier
                             .weight(1f),
                             onClick = {
-                                viewModel.onEvent(HomeEvent.AddRegexClicked)
+                                showRegexDialog.value = true
                             }) {
                             Text("NEW")
-                        }
-                        Spacer(modifier = Modifier.size(4.dp))
-                        Button(modifier = Modifier
-                            .weight(1f),
-                            onClick = {
-                                viewModel.onEvent(HomeEvent.SaveRegexClicked)
-                            }) {
-                            Text("SAVE")
                         }
                     }
                 }

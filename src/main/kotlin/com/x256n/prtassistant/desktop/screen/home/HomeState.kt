@@ -11,12 +11,6 @@ data class HomeState(
     val selectedIndex: Int = 0,
 
     val order: Int? = null,
-    val name: String = "",
-    val regex: String = "",
-    val replacement: String = "",
-    val caseInsensitive: Boolean = false,
-    val dotAll: Boolean = false,
-    val multiline: Boolean = false,
 
     val sourceText: TextFieldValue = TextFieldValue(""),
     val resultText: TextFieldValue = TextFieldValue(""),
@@ -24,18 +18,6 @@ data class HomeState(
     val selectedItem
         get() =
             storage.regexs[selectedIndex]
-
-    fun createItem() =
-        RegexModel(
-            order = order,
-            name = name,
-            regex = regex,
-            replacement = replacement,
-            caseInsensitive = caseInsensitive,
-            dotAll = dotAll,
-            multiline = multiline,
-            enabled = true
-        )
 
     val hasData get() = storage.regexs.isNotEmpty()
 }
