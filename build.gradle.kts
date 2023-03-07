@@ -44,15 +44,15 @@ compose.desktop {
     application {
         mainClass = "com.x256n.regexapplier.desktop.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "Regex applier"
-            description = project.description.toString()
+            targetFormats(TargetFormat.Msi)
+            packageName = "regex-applier"
             packageVersion = project.version.toString()
             windows {
                 dirChooser = true
                 menuGroup = packageName
                 shortcut = true
                 menu = true
+//                iconFile.set(project.file("src/main/resources/icon.ico"))
             }
         }
     }
