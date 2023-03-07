@@ -67,24 +67,22 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                     text = message
                 )
             }
-            if (showRegexDialog.value) {
-                RegexDialog(
-                    regexModel = showRegexDialogRegexModel.value,
-                    dialogVisible = showRegexDialog.value,
-                    onCancel = {
-                        showRegexDialog.value = false
-                        showRegexDialogRegexModel.value = RegexModel.Empty
-                    }, onSave = { regexModel ->
-                        showRegexDialog.value = false
-                        showRegexDialogRegexModel.value = RegexModel.Empty
+            RegexDialog(
+                regexModel = showRegexDialogRegexModel,
+                dialogVisible = showRegexDialog,
+                onCancel = {
+                    showRegexDialog.value = false
+                    showRegexDialogRegexModel.value = RegexModel.Empty
+                }, onSave = { regexModel ->
+                    showRegexDialog.value = false
+                    showRegexDialogRegexModel.value = RegexModel.Empty
 
-                        viewModel.onEvent(HomeEvent.SaveRegexClicked(regexModel))
-                    }, onRegexChanged = { regexModel ->
-                        viewModel.onEvent(
-                            HomeEvent.RegexChanged(regexModel)
-                        )
-                    })
-            }
+                    viewModel.onEvent(HomeEvent.SaveRegexClicked(regexModel))
+                }, onRegexChanged = { regexModel ->
+                    viewModel.onEvent(
+                        HomeEvent.RegexChanged(regexModel)
+                    )
+                })
             Row(
                 modifier = Modifier
                     .padding(8.dp)
@@ -163,6 +161,7 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                                             .padding(start = 5.dp)
                                             .weight(1f),
                                         text = item.name,
+                                        maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                     WinButton(modifier = Modifier
@@ -182,7 +181,7 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                                             onDoubleClick = {
                                                 viewModel.onEvent(HomeEvent.EditRegexClicked(item))
 
-                                                showRegexDialogRegexModel.value = item
+                                                showRegexDialogRegexModel.value = item.copy()
 
                                                 showRegexDialog.value = true
                                             },
@@ -233,6 +232,7 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                                     Text(
                                         modifier = Modifier
                                             .weight(1f),
+                                        maxLines = 1,
                                         text = item.name,
                                         overflow = TextOverflow.Ellipsis
                                     )

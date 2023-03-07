@@ -32,7 +32,7 @@ fun main() {
         )
         Window(
             onCloseRequest = ::exitApplication,
-            title = "Regex applier (by liosha) v1.0.0",
+            title = "Regex applier (by liosha) v1.0.1",
 //        icon = painterResource("icon.png"),
             resizable = true,
             state = state

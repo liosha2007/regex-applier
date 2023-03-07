@@ -9,7 +9,8 @@ plugins {
 }
 
 group = "com.x256n.regexapplier.desktop"
-version = "1.0.0" // UPDATE version in Main.kt as well
+version = "1.0.1" // UPDATE version in Main.kt as well
+description = ""
 
 repositories {
     google()
@@ -44,8 +45,15 @@ compose.desktop {
         mainClass = "com.x256n.regexapplier.desktop.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "regex-applier-desktop"
+            packageName = "Regex applier"
+            description = project.description.toString()
             packageVersion = project.version.toString()
+            windows {
+                dirChooser = true
+                menuGroup = packageName
+                shortcut = true
+                menu = true
+            }
         }
     }
 }

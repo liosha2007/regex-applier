@@ -4,19 +4,29 @@ import WinButton
 import WinTextField
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogState
+import com.x256n.lthwords.desktop.theme.spaces
+import com.x256n.regexapplier.desktop.common.createPattern
 import com.x256n.regexapplier.desktop.component.WinCheckbox
 import com.x256n.regexapplier.desktop.model.RegexModel
 import java.awt.Dimension
@@ -26,40 +36,56 @@ import java.awt.Dimension
 @ExperimentalFoundationApi
 @Composable
 fun RegexDialog(
-    dialogVisible: Boolean,
-    regexModel: RegexModel = RegexModel.Empty,
+    dialogVisible: MutableState<Boolean>,
+    regexModel: MutableState<RegexModel> = mutableStateOf(RegexModel.Empty),
     onCancel: () -> Unit,
     onSave: (
         regexModel: RegexModel
     ) -> Unit,
     onRegexChanged: (regexModel: RegexModel) -> Unit
 ) {
-    val regexModelValue = remember { mutableStateOf(regexModel.copy()) }
 
     val ruleNameColor = remember { mutableStateOf(Color.Black) }
     val regexColor = remember { mutableStateOf(Color.Black) }
+    val sampleResult = remember { mutableStateOf(regexModel.value.exampleSource) }
+
+    rememberSaveable(dialogVisible.value) {
+        updateSampleResult(regexModel, sampleResult)
+    }
 
     Dialog(
         undecorated = false,
         resizable = true,
-        visible = dialogVisible,
-        state = DialogState(width = 240.dp, height = 400.dp),
+        visible = dialogVisible.value,
+        state = DialogState(width = 360.dp, height = 500.dp),
         onCloseRequest = {
             onCancel()
         }
     ) {
-        this.window.minimumSize = Dimension(240, 400)
+        this.window.minimumSize = Dimension(240, 410)
+
+        val focusManager = LocalFocusManager.current
 
         Column(
             modifier = Modifier
+                .onPreviewKeyEvent {
+                    if (it.key == Key.Tab && it.type == KeyEventType.KeyDown) {
+                        if (it.isShiftPressed) {
+                            focusManager.moveFocus(FocusDirection.Previous)
+                        } else {
+                            focusManager.moveFocus(FocusDirection.Next)
+                        }
+                        true
+                    } else {
+                        false
+                    }
+                }
+                .padding(MaterialTheme.spaces.small)
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(5.dp)
                     .weight(1f)
             ) {
                 Text(
@@ -72,9 +98,9 @@ fun RegexDialog(
                 WinTextField(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    text = regexModelValue.value.name
+                    text = regexModel.value.name
                 ) {
-                    regexModelValue.value = regexModelValue.value.copy(name = it)
+                    regexModel.value = regexModel.value.copy(name = it)
                     ruleNameColor.value = Color.Black
                 }
 
@@ -91,13 +117,15 @@ fun RegexDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    text = regexModelValue.value.regex,
+                    text = regexModel.value.regex,
                     singleLine = false,
                     maxLines = 3
                 ) {
-                    regexModelValue.value = regexModelValue.value.copy(regex = it)
+                    regexModel.value = regexModel.value.copy(regex = it)
                     regexColor.value = Color.Black
-                    onRegexChanged(regexModelValue.value)
+                    onRegexChanged(regexModel.value)
+
+                    updateSampleResult(regexModel, sampleResult)
                 }
 
                 Spacer(modifier = Modifier.padding(5.dp))
@@ -112,11 +140,13 @@ fun RegexDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    text = regexModelValue.value.replacement,
+                    text = regexModel.value.replacement,
                     singleLine = false,
                     maxLines = 3
                 ) {
-                    regexModelValue.value = regexModelValue.value.copy(replacement = it)
+                    regexModel.value = regexModel.value.copy(replacement = it)
+
+                    updateSampleResult(regexModel, sampleResult)
                 }
 
                 Spacer(modifier = Modifier.padding(5.dp))
@@ -131,49 +161,76 @@ fun RegexDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    text = regexModelValue.value.exampleSource,
+                    text = regexModel.value.exampleSource,
                     singleLine = false,
                     maxLines = 3
                 ) {
-                    regexModelValue.value = regexModelValue.value.copy(exampleSource = it)
+                    regexModel.value = regexModel.value.copy(exampleSource = it)
+
+                    updateSampleResult(regexModel, sampleResult)
                 }
-
-                Spacer(modifier = Modifier.padding(5.dp))
-
-                WinCheckbox(
-                    text = "Case insensitive",
-                    isChecked = regexModelValue.value.isCaseInsensitive,
-                    onCheckedChange = {
-                        regexModelValue.value = regexModelValue.value.copy(isCaseInsensitive = it)
-                        onRegexChanged(regexModelValue.value)
-                    }
-                )
-
-                Spacer(modifier = Modifier.padding(5.dp))
-
-                WinCheckbox(
-                    text = "Dot all",
-                    isChecked = regexModelValue.value.isDotAll,
-                    onCheckedChange = {
-                        regexModelValue.value = regexModelValue.value.copy(isDotAll = it)
-                        onRegexChanged(regexModelValue.value)
-                    }
-                )
-
-                Spacer(modifier = Modifier.padding(5.dp))
-
-                WinCheckbox(
-                    text = "Multiline",
-                    isChecked = regexModelValue.value.isMultiline,
-                    onCheckedChange = {
-                        regexModelValue.value = regexModelValue.value.copy(isMultiline = it)
-                        onRegexChanged(regexModelValue.value)
-                    }
-                )
-
-                Spacer(modifier = Modifier.padding(5.dp))
-
             }
+            Spacer(modifier = Modifier.padding(5.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                ) {
+                    WinCheckbox(
+                        text = "Case insensitive",
+                        isChecked = regexModel.value.isCaseInsensitive,
+                        onCheckedChange = {
+                            regexModel.value = regexModel.value.copy(isCaseInsensitive = it)
+                            onRegexChanged(regexModel.value)
+
+                            updateSampleResult(regexModel, sampleResult)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.padding(5.dp))
+
+                    WinCheckbox(
+                        text = "Dot all",
+                        isChecked = regexModel.value.isDotAll,
+                        onCheckedChange = {
+                            regexModel.value = regexModel.value.copy(isDotAll = it)
+                            onRegexChanged(regexModel.value)
+
+                            updateSampleResult(regexModel, sampleResult)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.padding(5.dp))
+
+                    WinCheckbox(
+                        text = "Multiline",
+                        isChecked = regexModel.value.isMultiline,
+                        onCheckedChange = {
+                            regexModel.value = regexModel.value.copy(isMultiline = it)
+                            onRegexChanged(regexModel.value)
+
+                            updateSampleResult(regexModel, sampleResult)
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.padding(10.dp))
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .fillMaxHeight()
+                        .weight(1f)
+                ) {
+                    Text(
+                        modifier = Modifier,
+                        text = sampleResult.value
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.padding(5.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -195,16 +252,29 @@ fun RegexDialog(
                         .weight(1f),
                     text = "Save",
                     onClick = {
-                        if (regexModelValue.value.name.isBlank()) {
+                        if (regexModel.value.name.isBlank()) {
                             ruleNameColor.value = Color.Red
-                        } else if (regexModelValue.value.regex.isBlank()) {
+                        } else if (regexModel.value.regex.isBlank()) {
                             regexColor.value = Color.Red
                         } else {
-                            onSave(regexModelValue.value)
+                            onSave(regexModel.value)
                         }
                     }
                 )
             }
         }
     }
+}
+
+private fun updateSampleResult(
+    regexModel: MutableState<RegexModel>,
+    sampleResult: MutableState<String>
+) {
+    val pattern = createPattern(
+        regexModel.value.regex,
+        regexModel.value.isCaseInsensitive,
+        regexModel.value.isDotAll,
+        regexModel.value.isMultiline
+    )
+    sampleResult.value = pattern.matcher(regexModel.value.exampleSource).replaceAll(regexModel.value.replacement)
 }

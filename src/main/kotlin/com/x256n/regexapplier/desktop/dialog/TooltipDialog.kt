@@ -15,8 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogState
+import com.x256n.regexapplier.desktop.common.createPattern
 import java.awt.Dimension
-import java.util.regex.Pattern
 
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
@@ -47,12 +47,7 @@ fun TooltipDialog(
         this.window.isModal = false
 
         val replaceResult = rememberSaveable(exampleSource) {
-            var mode = 0
-            if (isCaseInsensitive) mode = mode or Pattern.CASE_INSENSITIVE
-            if (isDotAll) mode = mode or Pattern.DOTALL
-            if (isMultiline) mode = mode or Pattern.MULTILINE
-
-            val pattern = Pattern.compile(regex, mode)
+            val pattern = createPattern(regex, isCaseInsensitive, isDotAll, isMultiline)
             pattern.matcher(exampleSource).replaceAll(replacement)
         }
 
@@ -81,3 +76,4 @@ fun TooltipDialog(
         }
     }
 }
+
