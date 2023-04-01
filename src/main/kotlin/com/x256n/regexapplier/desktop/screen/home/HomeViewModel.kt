@@ -196,7 +196,7 @@ class HomeViewModel(
                     }
                 }
                 is HomeEvent.EditRegexClicked -> {
-                    println("Editing ${event.item}")
+                    // Processed in HomeScreen
                 }
                 is HomeEvent.ResetError -> {
                     _state.value = stateValue.copy(

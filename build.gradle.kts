@@ -52,7 +52,7 @@ compose.desktop {
                 menuGroup = packageName
                 shortcut = true
                 menu = true
-//                iconFile.set(project.file("src/main/resources/icon.ico"))
+                iconFile.set(project.file("src/main/resources/icon.ico"))
             }
         }
     }

@@ -39,6 +39,7 @@ import java.util.regex.PatternSyntaxException
 fun RegexDialog(
     dialogVisible: MutableState<Boolean>,
     regexModel: MutableState<RegexModel> = mutableStateOf(RegexModel.Empty),
+    state: DialogState = DialogState(width = 360.dp, height = 500.dp),
     onCancel: () -> Unit,
     onSave: (
         regexModel: RegexModel
@@ -59,7 +60,7 @@ fun RegexDialog(
         undecorated = false,
         resizable = true,
         visible = dialogVisible.value,
-        state = DialogState(width = 360.dp, height = 500.dp),
+        state = state,
         onCloseRequest = {
             onCancel()
         }
@@ -284,6 +285,8 @@ private fun updateSampleResult(
         sampleResult.value = pattern.matcher(regexModel.value.exampleSource).replaceAll(regexModel.value.replacement)
         isError.value = false
     } catch (e: PatternSyntaxException) {
+        isError.value = true
+    } catch (e: IllegalArgumentException) {
         isError.value = true
     } catch (e: Exception) {
         e.printStackTrace()

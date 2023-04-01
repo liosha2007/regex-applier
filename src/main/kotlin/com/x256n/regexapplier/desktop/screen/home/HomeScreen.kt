@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogState
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberDialogState
@@ -47,6 +48,7 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
 
     val showRegexDialog = remember { mutableStateOf(false) }
     val showRegexDialogRegexModel = remember { mutableStateOf(RegexModel.Empty) }
+    val dialogState = remember { DialogState(width = 360.dp, height = 500.dp) }
 
     if (!state.isLoading) {
         Column(
@@ -70,6 +72,7 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
             RegexDialog(
                 regexModel = showRegexDialogRegexModel,
                 dialogVisible = showRegexDialog,
+                state = dialogState,
                 onCancel = {
                     showRegexDialog.value = false
                     showRegexDialogRegexModel.value = RegexModel.Empty
