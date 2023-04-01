@@ -13,6 +13,7 @@ fun WinTextField(
     modifier: Modifier = Modifier,
     singleLine: Boolean = false,
     maxLines: Int = Int.MAX_VALUE,
+    isError: Boolean = false,
     onValueChange: (String) -> Unit
 ) {
     BasicTextField(
@@ -20,7 +21,7 @@ fun WinTextField(
             .border(
                 BorderStroke(
                     width = 1.dp,
-                    color = Color.Gray
+                    color = if (isError) Color.Red else Color.Gray
                 )
             )
             .padding(2.dp),

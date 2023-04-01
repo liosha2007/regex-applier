@@ -30,6 +30,7 @@ import com.x256n.regexapplier.desktop.common.createPattern
 import com.x256n.regexapplier.desktop.component.WinCheckbox
 import com.x256n.regexapplier.desktop.model.RegexModel
 import java.awt.Dimension
+import java.util.regex.PatternSyntaxException
 
 @ExperimentalMaterialApi
 @ExperimentalComposeUiApi
@@ -48,9 +49,10 @@ fun RegexDialog(
     val ruleNameColor = remember { mutableStateOf(Color.Black) }
     val regexColor = remember { mutableStateOf(Color.Black) }
     val sampleResult = remember { mutableStateOf(regexModel.value.exampleSource) }
+    val isError = remember { mutableStateOf(false) }
 
     rememberSaveable(dialogVisible.value) {
-        updateSampleResult(regexModel, sampleResult)
+        updateSampleResult(regexModel, sampleResult, isError)
     }
 
     Dialog(
@@ -119,13 +121,14 @@ fun RegexDialog(
                         .weight(1f),
                     text = regexModel.value.regex,
                     singleLine = false,
-                    maxLines = 3
+                    maxLines = 3,
+                    isError = isError.value
                 ) {
                     regexModel.value = regexModel.value.copy(regex = it)
                     regexColor.value = Color.Black
                     onRegexChanged(regexModel.value)
 
-                    updateSampleResult(regexModel, sampleResult)
+                    updateSampleResult(regexModel, sampleResult, isError)
                 }
 
                 Spacer(modifier = Modifier.padding(5.dp))
@@ -146,7 +149,7 @@ fun RegexDialog(
                 ) {
                     regexModel.value = regexModel.value.copy(replacement = it)
 
-                    updateSampleResult(regexModel, sampleResult)
+                    updateSampleResult(regexModel, sampleResult, isError)
                 }
 
                 Spacer(modifier = Modifier.padding(5.dp))
@@ -167,7 +170,7 @@ fun RegexDialog(
                 ) {
                     regexModel.value = regexModel.value.copy(exampleSource = it)
 
-                    updateSampleResult(regexModel, sampleResult)
+                    updateSampleResult(regexModel, sampleResult, isError)
                 }
             }
             Spacer(modifier = Modifier.padding(5.dp))
@@ -187,7 +190,7 @@ fun RegexDialog(
                             regexModel.value = regexModel.value.copy(isCaseInsensitive = it)
                             onRegexChanged(regexModel.value)
 
-                            updateSampleResult(regexModel, sampleResult)
+                            updateSampleResult(regexModel, sampleResult, isError)
                         }
                     )
 
@@ -200,7 +203,7 @@ fun RegexDialog(
                             regexModel.value = regexModel.value.copy(isDotAll = it)
                             onRegexChanged(regexModel.value)
 
-                            updateSampleResult(regexModel, sampleResult)
+                            updateSampleResult(regexModel, sampleResult, isError)
                         }
                     )
 
@@ -213,7 +216,7 @@ fun RegexDialog(
                             regexModel.value = regexModel.value.copy(isMultiline = it)
                             onRegexChanged(regexModel.value)
 
-                            updateSampleResult(regexModel, sampleResult)
+                            updateSampleResult(regexModel, sampleResult, isError)
                         }
                     )
                 }
@@ -256,7 +259,7 @@ fun RegexDialog(
                             ruleNameColor.value = Color.Red
                         } else if (regexModel.value.regex.isBlank()) {
                             regexColor.value = Color.Red
-                        } else {
+                        } else if (!isError.value) {
                             onSave(regexModel.value)
                         }
                     }
@@ -268,13 +271,22 @@ fun RegexDialog(
 
 private fun updateSampleResult(
     regexModel: MutableState<RegexModel>,
-    sampleResult: MutableState<String>
+    sampleResult: MutableState<String>,
+    isError: MutableState<Boolean>
 ) {
-    val pattern = createPattern(
-        regexModel.value.regex,
-        regexModel.value.isCaseInsensitive,
-        regexModel.value.isDotAll,
-        regexModel.value.isMultiline
-    )
-    sampleResult.value = pattern.matcher(regexModel.value.exampleSource).replaceAll(regexModel.value.replacement)
+    try {
+        val pattern = createPattern(
+            regexModel.value.regex,
+            regexModel.value.isCaseInsensitive,
+            regexModel.value.isDotAll,
+            regexModel.value.isMultiline
+        )
+        sampleResult.value = pattern.matcher(regexModel.value.exampleSource).replaceAll(regexModel.value.replacement)
+        isError.value = false
+    } catch (e: PatternSyntaxException) {
+        isError.value = true
+    } catch (e: Exception) {
+        e.printStackTrace()
+        isError.value = true
+    }
 }
