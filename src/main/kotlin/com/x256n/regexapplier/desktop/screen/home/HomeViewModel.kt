@@ -4,11 +4,13 @@ package com.x256n.regexapplier.desktop.screen.home
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.x256n.regexapplier.desktop.config.ConfigManager
 import com.x256n.regexapplier.desktop.model.RegexModel
 import com.x256n.regexapplier.desktop.model.StorageModel
-import com.x256n.regexapplier.desktop.navigation.Destinations
+import com.x256n.regexapplier.desktop.navigation.Destination
 import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -25,18 +27,29 @@ import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
 class HomeViewModel(
-
+    private val configManager: ConfigManager
 ) : KoinComponent {
     private val _state = mutableStateOf(HomeState())
     val state: State<HomeState> = _state
     private var replaceJob: Job? = null
 
-    fun onScreenDisplayed(dest: Destinations.Home) {
-        CoroutineScope(Dispatchers.Main).launch {
-            loadStorage()
-            applyChanges()
+    fun onScreenDisplayed(dest: Destination) {
+            if (dest is Destination.Home && dest.action is Destination.Home.Action.None) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    loadStorage()
+                    applyChanges()
+                }
+            }
+//            if (dest is Destinations.Home && dest.action is Destinations.Home.Action.LoadProject) {
+//                sendEvent(HomeEvent.LoadProject(dest.action.projectDirectory))
+//            }
+//            if (dest is Destinations.Home && dest.action is Destinations.Home.Action.YesCancelDialogResult) {
+//                sendEvent(dest.action.targetEvent as HomeEvent)
+//            }
+//            if (dest is Destinations.Home && dest.action is Destinations.Home.Action.DeleteCaptionsConfirmationDialogResult) {
+//                sendEvent(HomeEvent.DeleteAllCaptions(dest.action.isDeleteOnlyEmpty))
+//            }
         }
-    }
 
     fun onEvent(event: HomeEvent) {
         CoroutineScope(Dispatchers.Main).launch {
@@ -290,11 +303,11 @@ class HomeViewModel(
                 )
                 replaceJob = null
             }
-            delay(3000)
+            delay(configManager.processTimeout)
             if (replaceJob != null) {
                 replaceJob?.cancel()
                 _state.value = _state.value.copy(
-                    errorMessage = "It took more than 3 sec!"
+                    errorMessage = "The process took more than ${configManager.processTimeout}ms!"
                 )
             }
         }

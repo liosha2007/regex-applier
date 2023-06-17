@@ -24,4 +24,7 @@ sealed class HomeEvent {
 
     object ResetError : HomeEvent()
     object RegexDialogShown : HomeEvent()
+
+    object OpenFile : HomeEvent()
+    object ClearPanels : HomeEvent()
 }

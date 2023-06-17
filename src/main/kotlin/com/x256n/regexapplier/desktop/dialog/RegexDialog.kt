@@ -57,6 +57,7 @@ fun RegexDialog(
     }
 
     Dialog(
+        title = "Create rule",
         undecorated = false,
         resizable = true,
         visible = dialogVisible.value,

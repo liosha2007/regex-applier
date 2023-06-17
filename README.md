@@ -1,5 +1,5 @@
 # Regex Applier
-Desktop application that applies a list of regexes to a text
+UI application that applies a list of regexes to a text
 
 ## Main window
 

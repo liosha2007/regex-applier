@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
+
 package com.x256n.regexapplier.desktop.screen.home
 
 import WinButton
@@ -26,24 +28,20 @@ import androidx.compose.ui.window.DialogState
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberDialogState
-import com.chrynan.navigation.ExperimentalNavigationApi
 import com.x256n.regexapplier.desktop.component.WinCheckbox
 import com.x256n.regexapplier.desktop.dialog.RegexDialog
 import com.x256n.regexapplier.desktop.dialog.TooltipDialog
 import com.x256n.regexapplier.desktop.model.RegexModel
-import com.x256n.regexapplier.desktop.navigation.Destinations
-import com.x256n.regexapplier.desktop.navigation.Navigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@ExperimentalMaterialApi
-@OptIn(ExperimentalFoundationApi::class)
-@ExperimentalComposeUiApi
-@ExperimentalNavigationApi
 @Composable
-fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Navigator<Destinations.Home>) {
+fun HomeScreen(
+    windowState: WindowState,
+    viewModel: HomeViewModel
+) {
     val state by viewModel.state
 
     val showRegexDialog = remember { mutableStateOf(false) }
@@ -258,7 +256,13 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                                                         if (index > 0) {
                                                             Image(
                                                                 modifier = Modifier
-                                                                    .clickable { viewModel.onEvent(HomeEvent.UpClicked(item)) },
+                                                                    .clickable {
+                                                                        viewModel.onEvent(
+                                                                            HomeEvent.UpClicked(
+                                                                                item
+                                                                            )
+                                                                        )
+                                                                    },
                                                                 painter = painterResource("images/arrow-up.png"),
                                                                 contentDescription = null
                                                             )
@@ -273,7 +277,13 @@ fun HomeScreen(windowState: WindowState, viewModel: HomeViewModel, navigator: Na
                                                         if (index < state.storage.regexs.size - 1) {
                                                             Image(
                                                                 modifier = Modifier
-                                                                    .clickable { viewModel.onEvent(HomeEvent.DownClicked(item)) },
+                                                                    .clickable {
+                                                                        viewModel.onEvent(
+                                                                            HomeEvent.DownClicked(
+                                                                                item
+                                                                            )
+                                                                        )
+                                                                    },
                                                                 painter = painterResource("images/arrow-down.png"),
                                                                 contentDescription = null
                                                             )

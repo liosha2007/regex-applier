@@ -6,10 +6,11 @@ plugins {
     kotlin("jvm") version "1.5.31"
     id("org.jetbrains.compose") version "1.0.0"
     kotlin("plugin.serialization") version "1.5.31"
+    idea
 }
 
 group = "com.x256n.regexapplier.desktop"
-version = "1.0.1" // UPDATE version in Main.kt as well
+version = "1.0.2" // UPDATE version in Main.kt as well
 description = ""
 
 repositories {
@@ -31,7 +32,7 @@ dependencies {
 
 //    implementation("io.insert-koin:koin-core:3.2.0")
     implementation("io.insert-koin:koin-core-jvm:3.2.0")
-    implementation("org.postgresql:postgresql:42.3.6")
+//    implementation("org.postgresql:postgresql:42.3.6")
 
     implementation("ch.qos.logback:logback-classic:1.2.11")
 }
@@ -44,9 +45,12 @@ compose.desktop {
     application {
         mainClass = "com.x256n.regexapplier.desktop.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Msi)
+            targetFormats(TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Rpm)
             packageName = "regex-applier"
             packageVersion = project.version.toString()
+            description = "UI application that applies a list of regexes to a text"
+            copyright = "© 2023 liosha"
+            licenseFile.set(project.file("LICENSE"))
             windows {
                 dirChooser = true
                 menuGroup = packageName
@@ -54,6 +58,22 @@ compose.desktop {
                 menu = true
                 iconFile.set(project.file("src/main/resources/icon.ico"))
             }
+            linux {
+                iconFile.set(project.file("src/main/resources/icon.png"))
+                appCategory = "Utility"
+                shortcut = true
+                debMaintainer = "liosha"
+                debPackageVersion = project.version.toString()
+                rpmLicenseType = "MIT"
+                rpmPackageVersion = project.version.toString()
+            }
         }
+    }
+}
+
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
     }
 }
