@@ -1,31 +1,35 @@
-@file:OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class,
-    ExperimentalMaterialApi::class
-)
+@file:OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 
 package com.x256n.regexapplier.desktop.screen.home
 
 import WinButton
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogState
 import androidx.compose.ui.window.WindowPosition
@@ -38,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
+import java.awt.Cursor
 import java.nio.file.Path
 import javax.swing.JFileChooser
 import javax.swing.JRootPane
@@ -56,6 +61,12 @@ fun HomeScreen(
     val showRegexDialog = remember { mutableStateOf(false) }
     val showRegexDialogRegexModel = remember { mutableStateOf(RegexModel.Empty) }
     val dialogState = remember { DialogState(width = 360.dp, height = 500.dp) }
+    val spacerSize = 4.dp
+    val minRegexPanelWidth = 128.dp
+    var sourcePanelWidth by remember { mutableStateOf(380.dp) }
+    var resultPanelSize by remember { mutableStateOf(IntSize.Zero) }
+    var resultPanelWidth by remember { mutableStateOf(380.dp) }
+    var regexPanelSize by remember { mutableStateOf(IntSize.Zero) }
 
     if (!state.isLoading) {
         Column(
@@ -115,7 +126,7 @@ fun HomeScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        .width(sourcePanelWidth),
                 ) {
                     TextField(
                         modifier = Modifier
@@ -129,10 +140,28 @@ fun HomeScreen(
                         }
                     )
                 }
-                Spacer(modifier = Modifier.size(4.dp))
+
+                Spacer(modifier = Modifier
+                    .background(Color.Gray)
+                    .fillMaxHeight()
+                    .width(spacerSize)
+                    .pointerHoverIcon(icon = PointerIcon(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)))
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            matcher = PointerMatcher.Primary
+                        ) {
+                            if ((it.x > 0 && resultPanelSize.width.dp - it.x.dp > spacerSize) || (it.x < 0 && sourcePanelWidth + it.x.dp > spacerSize)) {
+                                sourcePanelWidth += it.x.dp
+                                resultPanelWidth -= it.x.dp
+                            }
+                        }
+                    })
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        .width(resultPanelWidth)
+                        .onSizeChanged {
+                            resultPanelSize = it
+                        }
                 ) {
                     TextField(modifier = Modifier
                         .fillMaxSize()
@@ -148,29 +177,31 @@ fun HomeScreen(
                         readOnly = false,
                         onValueChange = {})
                 }
-                Spacer(modifier = Modifier.size(4.dp))
-                val expanded = remember { mutableStateOf(false) }
+
+                Spacer(modifier = Modifier
+                    .background(Color.Gray)
+                    .fillMaxHeight()
+                    .width(spacerSize)
+                    .pointerHoverIcon(icon = PointerIcon(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)))
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            matcher = PointerMatcher.Primary
+                        ) {
+                            if ((it.x > 0 && regexPanelSize.width.dp - it.x.dp > minRegexPanelWidth) || (it.x < 0 && regexPanelSize.width.dp - it.x.dp > minRegexPanelWidth)) {
+                                resultPanelWidth += it.x.dp
+                            }
+                        }
+                    })
                 Column(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .wrapContentWidth(),
-                    verticalArrangement = Arrangement.SpaceAround,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Button(modifier = Modifier
-                        .width(8.dp)
-                        .height(50.dp), onClick = {
-                        expanded.value = !expanded.value
-                    }) {}
-                }
-                Column(
-                    modifier = Modifier
-                        .width(if (expanded.value) 350.dp else 220.dp)
+                        .weight(1f)
+                        .onSizeChanged {
+                            regexPanelSize = it
+                        }
                 ) {
                     LazyColumn(
                         modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
+                            .fillMaxSize()
                     ) {
                         itemsIndexed(state.storage.regexs.sortedBy { it.order }) { index, item ->
                             if (state.itemToDelete == item) {

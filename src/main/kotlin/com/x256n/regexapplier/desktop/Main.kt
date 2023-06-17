@@ -41,7 +41,7 @@ fun main() {
     configureKoin()
     application {
         val state = rememberWindowState(
-            width = 400.dp,
+            width = 1024.dp,
             height = 680.dp,
             position = WindowPosition.PlatformDefault
         )

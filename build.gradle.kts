@@ -3,9 +3,9 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.5.31"
-    id("org.jetbrains.compose") version "1.0.0"
-    kotlin("plugin.serialization") version "1.5.31"
+    kotlin("jvm") version "1.7.10"
+    id("org.jetbrains.compose") version "1.3.1"
+    kotlin("plugin.serialization") version "1.6.10"
     idea
 }
 
@@ -24,8 +24,9 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.2")
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.6.4")
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.2")
 
     implementation("com.chrynan.navigation:navigation-core:0.4.0")
     implementation("com.chrynan.navigation:navigation-compose:0.4.0")
