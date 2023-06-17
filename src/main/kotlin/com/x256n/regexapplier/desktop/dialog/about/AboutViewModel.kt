@@ -22,7 +22,7 @@ class AboutViewModel(
 
 
     fun onEvent(event: AboutEvent) {
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(dispatcherProvider.main).launch {
             when (event) {
                 is AboutEvent.AboutDisplayed -> {
 //                    _log.info(doSampleModel())

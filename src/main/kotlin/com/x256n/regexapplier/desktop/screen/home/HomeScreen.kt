@@ -8,10 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -43,6 +40,7 @@ fun HomeScreen(
     viewModel: HomeViewModel
 ) {
     val state by viewModel.state
+    val coroutineScope = rememberCoroutineScope()
 
     val showRegexDialog = remember { mutableStateOf(false) }
     val showRegexDialogRegexModel = remember { mutableStateOf(RegexModel.Empty) }
@@ -55,7 +53,7 @@ fun HomeScreen(
         ) {
             rememberSaveable(state.errorMessage) {
                 if (state.errorMessage != null) {
-                    CoroutineScope(Dispatchers.Default).launch {
+                    coroutineScope.launch(Dispatchers.Default) {
                         delay(5000)
                         viewModel.onEvent(HomeEvent.ResetError)
                     }

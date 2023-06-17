@@ -1,12 +1,12 @@
-@file:OptIn(ExperimentalSerializationApi::class)
+@file:OptIn(ExperimentalSerializationApi::class, ExperimentalSerializationApi::class)
 
 package com.x256n.regexapplier.desktop.screen.home
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import com.x256n.regexapplier.desktop.common.DispatcherProvider
 import com.x256n.regexapplier.desktop.config.ConfigManager
 import com.x256n.regexapplier.desktop.model.RegexModel
 import com.x256n.regexapplier.desktop.model.StorageModel
@@ -27,7 +27,8 @@ import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
 class HomeViewModel(
-    private val configManager: ConfigManager
+    private val configManager: ConfigManager,
+    private val dispatcherProvider: DispatcherProvider
 ) : KoinComponent {
     private val _state = mutableStateOf(HomeState())
     val state: State<HomeState> = _state
@@ -35,7 +36,7 @@ class HomeViewModel(
 
     fun onScreenDisplayed(dest: Destination) {
             if (dest is Destination.Home && dest.action is Destination.Home.Action.None) {
-                CoroutineScope(Dispatchers.Main).launch {
+                CoroutineScope(dispatcherProvider.default).launch {
                     loadStorage()
                     applyChanges()
                 }
@@ -52,7 +53,7 @@ class HomeViewModel(
         }
 
     fun onEvent(event: HomeEvent) {
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(dispatcherProvider.main).launch {
             val stateValue = _state.value
             when (event) {
                 is HomeEvent.SourceChanged -> {
@@ -259,17 +260,15 @@ class HomeViewModel(
 
     private fun saveStorage() {
         val storage = _state.value.storage
-        CoroutineScope(Dispatchers.Default).launch {
-            withContext(Dispatchers.IO) {
-                BufferedOutputStream(FileOutputStream("storage.json")).use { stream ->
-                    Json.encodeToStream(storage, stream)
-                }
+        CoroutineScope(dispatcherProvider.io).launch {
+            BufferedOutputStream(FileOutputStream("storage.json")).use { stream ->
+                Json.encodeToStream(storage, stream)
             }
         }
     }
 
     private suspend fun loadStorage() {
-        val storage: StorageModel? = withContext(Dispatchers.IO) {
+        val storage: StorageModel? = withContext(dispatcherProvider.io) {
             val file = Paths.get("storage.json")
             if (Files.exists(file)) {
                 BufferedInputStream(FileInputStream(file.toFile())).use { stream ->
@@ -291,7 +290,7 @@ class HomeViewModel(
     }
 
     private suspend fun applyChanges() {
-        withContext(Dispatchers.Default) {
+        withContext(dispatcherProvider.default) {
             replaceJob = async {
                 var processText = _state.value.sourceText.text
                 _state.value.storage.regexs.filter { it.isEnabled }.sortedBy { it.order }.forEach {

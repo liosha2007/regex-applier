@@ -22,7 +22,7 @@ class SettingsViewModel(
 
 
     fun onEvent(event: SettingsEvent) {
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(dispatcherProvider.main).launch {
             when (event) {
                 is SettingsEvent.SettingsDisplayed -> {
                     _state.value = state.value.copy(
