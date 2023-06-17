@@ -1,4 +1,6 @@
-@file:OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
+@file:OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class,
+    ExperimentalMaterialApi::class
+)
 
 package com.x256n.regexapplier.desktop.screen.home
 
@@ -8,7 +10,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -20,26 +25,32 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogState
 import androidx.compose.ui.window.WindowPosition
-import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberDialogState
 import com.x256n.regexapplier.desktop.component.WinCheckbox
 import com.x256n.regexapplier.desktop.dialog.RegexDialog
 import com.x256n.regexapplier.desktop.dialog.TooltipDialog
 import com.x256n.regexapplier.desktop.model.RegexModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
+import java.nio.file.Path
+import javax.swing.JFileChooser
+import javax.swing.JRootPane
 
 @Composable
 fun HomeScreen(
-    windowState: WindowState,
-    viewModel: HomeViewModel
+    state: HomeState,
+    sendEvent: (HomeEvent) -> Unit = {},
+    rootPanel: JRootPane? = null,
+    windowPositionX: Dp = 0.dp,
+    windowPositionY: Dp = 0.dp,
 ) {
-    val state by viewModel.state
+    val log = remember { LoggerFactory.getLogger("HomeScreen") }
     val coroutineScope = rememberCoroutineScope()
 
     val showRegexDialog = remember { mutableStateOf(false) }
@@ -55,7 +66,7 @@ fun HomeScreen(
                 if (state.errorMessage != null) {
                     coroutineScope.launch(Dispatchers.Default) {
                         delay(5000)
-                        viewModel.onEvent(HomeEvent.ResetError)
+                        sendEvent(HomeEvent.ResetError)
                     }
                 }
             }
@@ -64,6 +75,22 @@ fun HomeScreen(
                     color = Color.Red,
                     text = message
                 )
+            }
+            if (state.isShowChooseProjectDirectoryDialog) {
+                val fileChooser = JFileChooser(System.getProperty("user.home") ?: "/").apply {
+                    fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+                    dialogTitle = "Select a file"
+                    approveButtonText = "Select"
+//            approveButtonToolTipText = "Select current directory as save destination"
+                }
+                fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
+                rootPanel?.let {
+                    fileChooser.showOpenDialog(it)
+                }
+                fileChooser.selectedFile?.let {
+                    log.debug("result = ${it.path}")
+                    sendEvent(HomeEvent.OpenFile(action = HomeEvent.OpenFile.Action.ProcessSelectedFile(Path.of(it.path))))
+                }
             }
             RegexDialog(
                 regexModel = showRegexDialogRegexModel,
@@ -76,9 +103,9 @@ fun HomeScreen(
                     showRegexDialog.value = false
                     showRegexDialogRegexModel.value = RegexModel.Empty
 
-                    viewModel.onEvent(HomeEvent.SaveRegexClicked(regexModel))
+                    sendEvent(HomeEvent.SaveRegexClicked(regexModel))
                 }, onRegexChanged = { regexModel ->
-                    viewModel.onEvent(
+                    sendEvent(
                         HomeEvent.RegexChanged(regexModel)
                     )
                 })
@@ -98,7 +125,7 @@ fun HomeScreen(
                             Text("Source text")
                         },
                         onValueChange = {
-                            viewModel.onEvent(HomeEvent.SourceChanged(it))
+                            sendEvent(HomeEvent.SourceChanged(it))
                         }
                     )
                 }
@@ -111,7 +138,7 @@ fun HomeScreen(
                         .fillMaxSize()
                         .onFocusChanged {
                             if (it.hasFocus) {
-                                viewModel.onEvent(HomeEvent.ResultFocused)
+                                sendEvent(HomeEvent.ResultFocused)
                             }
                         },
                         value = state.resultText,
@@ -167,7 +194,7 @@ fun HomeScreen(
                                         .padding(bottom = 2.dp),
                                         text = "Delete!",
                                         onClick = {
-                                            viewModel.onEvent(HomeEvent.DeleteConfirmed(item))
+                                            sendEvent(HomeEvent.DeleteConfirmed(item))
                                         }
                                     )
                                 }
@@ -178,14 +205,14 @@ fun HomeScreen(
                                         .fillMaxWidth()
                                         .combinedClickable(enabled = true,
                                             onDoubleClick = {
-                                                viewModel.onEvent(HomeEvent.EditRegexClicked(item))
+                                                sendEvent(HomeEvent.EditRegexClicked(item))
 
                                                 showRegexDialogRegexModel.value = item.copy()
 
                                                 showRegexDialog.value = true
                                             },
                                             onClick = {
-                                                viewModel.onEvent(HomeEvent.RegexSelected(item, index))
+                                                sendEvent(HomeEvent.RegexSelected(item, index))
                                             })
                                         .background(if (state.selectedIndex == index) Color.LightGray else Color.Transparent),
                                     verticalAlignment = Alignment.CenterVertically
@@ -211,8 +238,8 @@ fun HomeScreen(
                                             val offset = coordinates.positionInWindow()
 
                                             tooltipState.position = WindowPosition(
-                                                x = windowState.position.x + offset.x.dp - tooltipState.size.width + 20.dp,
-                                                y = windowState.position.y + offset.y.dp + 55.dp
+                                                x = windowPositionX + offset.x.dp - tooltipState.size.width + 20.dp,
+                                                y = windowPositionY + offset.y.dp + 55.dp
                                             )
 //                                            println("Tooltip position = x: ${tooltipState.position.x}, y: ${tooltipState.position.y}")
                                         }
@@ -226,7 +253,7 @@ fun HomeScreen(
                                                 false
                                             }),
                                         isChecked = item.isEnabled, onCheckedChange = {
-                                            viewModel.onEvent(HomeEvent.EnabledClicked(item))
+                                            sendEvent(HomeEvent.EnabledClicked(item))
                                         })
                                     Text(
                                         modifier = Modifier
@@ -255,7 +282,7 @@ fun HomeScreen(
                                                             Image(
                                                                 modifier = Modifier
                                                                     .clickable {
-                                                                        viewModel.onEvent(
+                                                                        sendEvent(
                                                                             HomeEvent.UpClicked(
                                                                                 item
                                                                             )
@@ -276,7 +303,7 @@ fun HomeScreen(
                                                             Image(
                                                                 modifier = Modifier
                                                                     .clickable {
-                                                                        viewModel.onEvent(
+                                                                        sendEvent(
                                                                             HomeEvent.DownClicked(
                                                                                 item
                                                                             )
@@ -292,7 +319,7 @@ fun HomeScreen(
                                             Image(
                                                 modifier = Modifier
                                                     .size(16.dp)
-                                                    .clickable { viewModel.onEvent(HomeEvent.DeleteClicked(item)) }
+                                                    .clickable { sendEvent(HomeEvent.DeleteClicked(item)) }
                                                     .padding(2.dp),
                                                 painter = painterResource("images/cross.png"), contentDescription = null
                                             )
@@ -306,7 +333,7 @@ fun HomeScreen(
                         WinButton(modifier = Modifier
                             .weight(1f),
                             onClick = {
-                                viewModel.onEvent(HomeEvent.RegexDialogShown)
+                                sendEvent(HomeEvent.RegexDialogShown)
                                 showRegexDialog.value = true
                             }) {
                             Text("CREATE RULE")

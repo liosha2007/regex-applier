@@ -35,12 +35,12 @@ class HomeViewModel(
     private var replaceJob: Job? = null
 
     fun onScreenDisplayed(dest: Destination) {
-            if (dest is Destination.Home && dest.action is Destination.Home.Action.None) {
-                CoroutineScope(dispatcherProvider.default).launch {
-                    loadStorage()
-                    applyChanges()
-                }
+        if (dest is Destination.Home && dest.action is Destination.Home.Action.None) {
+            CoroutineScope(dispatcherProvider.default).launch {
+                loadStorage()
+                applyChanges()
             }
+        }
 //            if (dest is Destinations.Home && dest.action is Destinations.Home.Action.LoadProject) {
 //                sendEvent(HomeEvent.LoadProject(dest.action.projectDirectory))
 //            }
@@ -50,7 +50,7 @@ class HomeViewModel(
 //            if (dest is Destinations.Home && dest.action is Destinations.Home.Action.DeleteCaptionsConfirmationDialogResult) {
 //                sendEvent(HomeEvent.DeleteAllCaptions(dest.action.isDeleteOnlyEmpty))
 //            }
-        }
+    }
 
     fun onEvent(event: HomeEvent) {
         CoroutineScope(dispatcherProvider.main).launch {
@@ -63,6 +63,7 @@ class HomeViewModel(
                     )
                     applyChanges()
                 }
+
                 is HomeEvent.RegexSelected -> {
                     _state.value = stateValue.copy(
                         itemToDelete = null, // Reset deletion confirmation
@@ -70,11 +71,13 @@ class HomeViewModel(
                         order = event.value.order
                     )
                 }
+
                 is HomeEvent.DeleteClicked -> {
                     _state.value = stateValue.copy(
                         itemToDelete = event.value
                     )
                 }
+
                 is HomeEvent.DeleteConfirmed -> {
                     _state.value = stateValue.copy(
                         itemToDelete = null, // Reset deletion confirmation
@@ -90,6 +93,7 @@ class HomeViewModel(
                     )
                     saveStorage()
                 }
+
                 is HomeEvent.ResultFocused -> {
                     _state.value = stateValue.copy(
                         itemToDelete = null, // Reset deletion confirmation
@@ -98,6 +102,7 @@ class HomeViewModel(
                         )
                     )
                 }
+
                 is HomeEvent.EnabledClicked -> {
                     val regexs = stateValue.storage.regexs.toMutableList().apply {
                         remove(event.item)
@@ -112,6 +117,7 @@ class HomeViewModel(
                     saveStorage()
                     applyChanges()
                 }
+
                 is HomeEvent.UpClicked -> {
                     val item = event.item
                     if (item.order != null && item.order > 0) {
@@ -136,6 +142,7 @@ class HomeViewModel(
                         applyChanges()
                     }
                 }
+
                 is HomeEvent.DownClicked -> {
                     val item = event.item
                     if (item.order != null && item.order < stateValue.storage.regexs.lastIndex) {
@@ -160,6 +167,7 @@ class HomeViewModel(
                         applyChanges()
                     }
                 }
+
                 is HomeEvent.SaveRegexClicked -> {
                     val newItem = RegexModel(
                         name = event.regexModel.name,
@@ -195,6 +203,7 @@ class HomeViewModel(
                     saveStorage()
                     applyChanges()
                 }
+
                 is HomeEvent.RegexChanged -> {
                     detectTextSelectionRange(
                         regex = event.regexModel.regex,
@@ -209,21 +218,64 @@ class HomeViewModel(
                         )
                     }
                 }
+
                 is HomeEvent.EditRegexClicked -> {
                     // Processed in HomeScreen
                 }
+
                 is HomeEvent.ResetError -> {
                     _state.value = stateValue.copy(
                         errorMessage = null
                     )
                 }
+
                 is HomeEvent.RegexDialogShown -> {
                     _state.value = stateValue.copy(
                         itemToDelete = null, // Reset deletion confirmation
                     )
                 }
+
+                is HomeEvent.OpenFile -> {
+                    openFile(event.action)
+                }
+
+                is HomeEvent.ClearPanels -> {
+                    clearPanels()
+                }
             }
         }
+    }
+
+    private suspend fun clearPanels() {
+        _state.value = state.value.copy(
+            sourceText = TextFieldValue()
+        )
+        applyChanges()
+    }
+
+    private suspend fun openFile(action: HomeEvent.OpenFile.Action) {
+        when (action) {
+            is HomeEvent.OpenFile.Action.ShowFileChooserDialog ->
+                _state.value = state.value.copy(isShowChooseProjectDirectoryDialog = true)
+
+            is HomeEvent.OpenFile.Action.ProcessSelectedFile -> {
+                CoroutineScope(dispatcherProvider.io).launch {
+                    if (Files.exists(action.path) && Files.isRegularFile(action.path) && Files.isReadable(action.path)) {
+                        val fileContent = Files.readString(action.path)
+                        _state.value = state.value.copy(
+                            isShowChooseProjectDirectoryDialog = false,
+                            sourceText = TextFieldValue(fileContent)
+                        )
+                        applyChanges()
+                    } else {
+                        _state.value = state.value.copy(
+                            errorMessage = "Can't read '${action.path}' file!"
+                        )
+                    }
+                }
+            }
+        }
+
     }
 
     private fun detectTextSelectionRange(
@@ -276,15 +328,17 @@ class HomeViewModel(
                 }
             } else null
         }
-        storage?.let {
-            _state.value = _state.value.copy(
-                storage = storage,
-            )
-            if (_state.value.hasData) {
+        withContext(dispatcherProvider.main) {
+            storage?.let {
                 _state.value = _state.value.copy(
                     storage = storage,
-                    order = _state.value.selectedItem.order,
                 )
+                if (_state.value.hasData) {
+                    _state.value = _state.value.copy(
+                        storage = storage,
+                        order = _state.value.selectedItem.order,
+                    )
+                }
             }
         }
     }

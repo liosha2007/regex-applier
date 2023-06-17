@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalFoundationApi::class)
+@file:OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class)
 
 package com.x256n.regexapplier.desktop
 
@@ -21,12 +21,12 @@ import com.chrynan.navigation.compose.rememberNavigatorByKey
 import com.x256n.regexapplier.desktop.config.ConfigManager
 import com.x256n.regexapplier.desktop.di.ModulesInjection
 import com.x256n.regexapplier.desktop.dialog.about.AboutDialog
+import com.x256n.regexapplier.desktop.dialog.settings.SettingsDialog
 import com.x256n.regexapplier.desktop.navigation.Destination
 import com.x256n.regexapplier.desktop.screen.component.MainMenu
 import com.x256n.regexapplier.desktop.screen.home.HomeEvent
 import com.x256n.regexapplier.desktop.screen.home.HomeScreen
 import com.x256n.regexapplier.desktop.screen.home.HomeViewModel
-import com.x256n.regexapplier.desktop.dialog.settings.SettingsDialog
 import org.koin.core.context.startKoin
 import org.koin.core.logger.PrintLogger
 import org.koin.java.KoinJavaComponent
@@ -65,7 +65,7 @@ fun main() {
                     MenuBar {
                         MainMenu(
                             onOpenFile = {
-                                viewModel.onEvent(HomeEvent.OpenFile)
+                                viewModel.onEvent(HomeEvent.OpenFile())
                             },
                             onClearPanels = {
                                 viewModel.onEvent(HomeEvent.ClearPanels)
@@ -88,11 +88,18 @@ fun main() {
                     ) {
                         Box(modifier = Modifier.weight(1f)) {
 
-                            HomeScreen(state, viewModel)
+                            HomeScreen(
+                                state = viewModel.state.value,
+                                sendEvent = viewModel::onEvent,
+                                rootPanel = window.rootPane,
+                                windowPositionX = state.position.x,
+                                windowPositionY = state.position.y
+                            )
 
                             when (dest) {
                                 is Destination.Home -> { /* Active always, ignore */
                                 }
+
                                 is Destination.Settings -> {
                                     SettingsDialog(
                                         onCancel = {

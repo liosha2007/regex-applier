@@ -2,6 +2,7 @@ package com.x256n.regexapplier.desktop.screen.home
 
 import androidx.compose.ui.text.input.TextFieldValue
 import com.x256n.regexapplier.desktop.model.RegexModel
+import java.nio.file.Path
 
 sealed class HomeEvent {
     data class SourceChanged(val value: TextFieldValue) : HomeEvent()
@@ -25,6 +26,11 @@ sealed class HomeEvent {
     object ResetError : HomeEvent()
     object RegexDialogShown : HomeEvent()
 
-    object OpenFile : HomeEvent()
+    data class OpenFile(val action: Action = Action.ShowFileChooserDialog) : HomeEvent() {
+        sealed interface Action {
+            object ShowFileChooserDialog : Action
+            data class ProcessSelectedFile(val path: Path) : Action
+        }
+    }
     object ClearPanels : HomeEvent()
 }
