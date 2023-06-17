@@ -5,6 +5,7 @@ import WinTextField
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
@@ -102,6 +103,8 @@ fun RegexDialog(
                 WinTextField(
                     modifier = Modifier
                         .fillMaxWidth(),
+                    fieldModifier = Modifier
+                        .fillMaxWidth(),
                     text = regexModel.value.name
                 ) {
                     regexModel.value = regexModel.value.copy(name = it)
@@ -121,6 +124,8 @@ fun RegexDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
+                    fieldModifier = Modifier
+                        .fillMaxWidth(),
                     text = regexModel.value.regex,
                     singleLine = false,
                     maxLines = 3,
@@ -145,6 +150,8 @@ fun RegexDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
+                    fieldModifier = Modifier
+                        .fillMaxWidth(),
                     text = regexModel.value.replacement,
                     singleLine = false,
                     maxLines = 3
@@ -166,6 +173,8 @@ fun RegexDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
+                    fieldModifier = Modifier
+                        .fillMaxWidth(),
                     text = regexModel.value.exampleSource,
                     singleLine = false,
                     maxLines = 3

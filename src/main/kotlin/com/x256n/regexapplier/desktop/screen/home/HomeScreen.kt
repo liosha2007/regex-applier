@@ -201,7 +201,7 @@ fun HomeScreen(
                 ) {
                     LazyColumn(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .weight(1f)
                     ) {
                         itemsIndexed(state.storage.regexs.sortedBy { it.order }) { index, item ->
                             if (state.itemToDelete == item) {
