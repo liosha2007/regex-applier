@@ -15,7 +15,7 @@ data class HomeState(
 
     val sourceText: TextFieldValue = TextFieldValue(""),
     val resultText: TextFieldValue = TextFieldValue(""),
-    val isShowChooseProjectDirectoryDialog: Boolean = false,
+    val isShowFileChooserDialog: Boolean = false,
 ) {
     val selectedItem
         get() =

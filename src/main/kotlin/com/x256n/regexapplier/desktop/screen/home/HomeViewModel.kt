@@ -17,6 +17,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
 import org.koin.core.component.KoinComponent
+import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.FileInputStream
@@ -30,9 +31,13 @@ class HomeViewModel(
     private val configManager: ConfigManager,
     private val dispatcherProvider: DispatcherProvider
 ) : KoinComponent {
+    private val _log = LoggerFactory.getLogger("HomeViewModel")
+
     private val _state = mutableStateOf(HomeState())
     val state: State<HomeState> = _state
     private var replaceJob: Job? = null
+    private var previewJob: Job? = null
+    private var timeoutJob: Job? = null
 
     fun onScreenDisplayed(dest: Destination) {
         if (dest is Destination.Home && dest.action is Destination.Home.Action.None) {
@@ -89,7 +94,8 @@ class HomeViewModel(
                                     order = index
                                 )
                             }
-                        )
+                        ),
+                        selectedIndex = kotlin.math.max(_state.value.selectedIndex - 1, 0)
                     )
                     saveStorage()
                 }
@@ -205,18 +211,26 @@ class HomeViewModel(
                 }
 
                 is HomeEvent.RegexChanged -> {
+                    _log.debug("RegexChanged: {}", event.regexModel)
+                    // Reset selection
+                    _state.value = stateValue.copy(
+                        resultText = TextFieldValue(
+                            text = stateValue.resultText.text
+                        )
+                    )
                     detectTextSelectionRange(
                         regex = event.regexModel.regex,
                         isCaseInsensitive = event.regexModel.isCaseInsensitive,
                         isDotAll = event.regexModel.isDotAll,
-                        isMultiline = event.regexModel.isMultiline
-                    )?.let { textRange ->
-                        _state.value = stateValue.copy(
-                            sourceText = stateValue.sourceText.copy(
-                                selection = textRange
+                        isMultiline = event.regexModel.isMultiline,
+                        onRangeDetected = { textRange ->
+                            _state.value = stateValue.copy(
+                                resultText = stateValue.resultText.copy(
+                                    selection = textRange
+                                )
                             )
-                        )
-                    }
+                        }
+                    )
                 }
 
                 is HomeEvent.EditRegexClicked -> {
@@ -242,6 +256,10 @@ class HomeViewModel(
                 is HomeEvent.ClearPanels -> {
                     clearPanels()
                 }
+
+                else -> {
+                    _log.warn("Unknown event: $event")
+                }
             }
         }
     }
@@ -256,14 +274,14 @@ class HomeViewModel(
     private suspend fun openFile(action: HomeEvent.OpenFile.Action) {
         when (action) {
             is HomeEvent.OpenFile.Action.ShowFileChooserDialog ->
-                _state.value = state.value.copy(isShowChooseProjectDirectoryDialog = true)
+                _state.value = state.value.copy(isShowFileChooserDialog = true)
 
             is HomeEvent.OpenFile.Action.ProcessSelectedFile -> {
                 CoroutineScope(dispatcherProvider.io).launch {
                     if (Files.exists(action.path) && Files.isRegularFile(action.path) && Files.isReadable(action.path)) {
                         val fileContent = Files.readString(action.path)
                         _state.value = state.value.copy(
-                            isShowChooseProjectDirectoryDialog = false,
+                            isShowFileChooserDialog = false,
                             sourceText = TextFieldValue(fileContent)
                         )
                         applyChanges()
@@ -278,36 +296,56 @@ class HomeViewModel(
 
     }
 
-    private fun detectTextSelectionRange(
+    private suspend fun detectTextSelectionRange(
         regex: String,
         isCaseInsensitive: Boolean,
         isDotAll: Boolean,
-        isMultiline: Boolean
-    ): TextRange? {
+        isMultiline: Boolean,
+        onRangeDetected: (TextRange) -> Unit
+    ) {
         if (regex.isNotBlank()) {
             val resultText = _state.value.resultText.text
             val resultCursor = _state.value.resultText.selection.start
-            try {
-                val pattern = compilePattern(
-                    regex,
-                    isCaseInsensitive,
-                    isDotAll,
-                    isMultiline
-                )
-                val matcher = pattern.matcher(resultText)
-                if (matcher.find()) {
-                    val found = matcher.group()
-                    var start = resultText.indexOf(found, startIndex = resultCursor)
-                    if (start == -1) {
-                        start = resultText.indexOf(found)
+            return withContext(dispatcherProvider.default) {
+                timeoutJob?.cancel()
+                previewJob?.cancel()
+
+                previewJob = async {
+                    try {
+                        val pattern = compilePattern(
+                            regex,
+                            isCaseInsensitive,
+                            isDotAll,
+                            isMultiline
+                        )
+                        val matcher = pattern.matcher(resultText)
+                        if (matcher.find()) {
+                            val found = matcher.group()
+                            var start = resultText.indexOf(found, startIndex = resultCursor)
+                            if (start == -1) {
+                                start = resultText.indexOf(found)
+                            }
+                            previewJob = null
+                            withContext(dispatcherProvider.default) {
+                                onRangeDetected(TextRange(start, start + found.length))
+                            }
+                        }
+                    } catch (e: PatternSyntaxException) {
+                        previewJob = null
+                        // Entering not finished
                     }
-                    return TextRange(start, start + found.length)
                 }
-            } catch (e: PatternSyntaxException) {
-                // Entering not finished
+                timeoutJob = async {
+                    delay(configManager.processTimeout)
+                    if (isActive && previewJob != null && previewJob?.isActive == true) {
+                        previewJob?.cancel()
+                        _state.value = _state.value.copy(
+                            errorMessage = "The process took more than ${configManager.processTimeout}ms!"
+                        )
+                    }
+                }
             }
         }
-        return null
     }
 
     private fun saveStorage() {
@@ -357,7 +395,7 @@ class HomeViewModel(
                 replaceJob = null
             }
             delay(configManager.processTimeout)
-            if (replaceJob != null) {
+            if (isActive && replaceJob != null && replaceJob?.isActive == true) {
                 replaceJob?.cancel()
                 _state.value = _state.value.copy(
                     errorMessage = "The process took more than ${configManager.processTimeout}ms!"

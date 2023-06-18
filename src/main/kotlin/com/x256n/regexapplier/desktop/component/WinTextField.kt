@@ -1,4 +1,5 @@
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
@@ -17,7 +18,9 @@ fun WinTextField(
     title: String? = null,
     modifier: Modifier = Modifier.fillMaxWidth(),
     titleModifier: Modifier = Modifier,
-    fieldModifier: Modifier = Modifier.width(80.dp),
+    fieldModifier: Modifier = Modifier
+        .width(80.dp),
+    backgroundColor: Color = Color(0.95f, 0.95f, 0.95f),
     singleLine: Boolean = false,
     maxLines: Int = Int.MAX_VALUE,
     isError: Boolean = false,
@@ -37,6 +40,7 @@ fun WinTextField(
         }
         BasicTextField(
             modifier = fieldModifier
+                .background(backgroundColor)
                 .border(
                     BorderStroke(
                         width = 1.dp,

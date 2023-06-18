@@ -1,5 +1,6 @@
 package com.x256n.regexapplier.desktop.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -31,7 +32,10 @@ fun WinCheckbox(
                     .padding(2.dp),
                 checked = isChecked,
                 enabled = enabled,
-                colors = CheckboxDefaults.colors(checkedColor = Color.DarkGray),
+                colors = CheckboxDefaults.colors(
+                    uncheckedColor = Color.DarkGray,
+                    checkedColor = Color.DarkGray
+                ),
                 onCheckedChange = onCheckedChange
             )
         }

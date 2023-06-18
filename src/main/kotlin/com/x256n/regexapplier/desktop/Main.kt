@@ -8,19 +8,24 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.*
 import com.chrynan.navigation.ExperimentalNavigationApi
+import com.chrynan.navigation.StackDuplicateContentStrategy
 import com.chrynan.navigation.compose.NavContainer
 import com.chrynan.navigation.compose.goTo
 import com.chrynan.navigation.compose.rememberNavigatorByKey
 import com.x256n.regexapplier.desktop.config.ConfigManager
 import com.x256n.regexapplier.desktop.di.ModulesInjection
 import com.x256n.regexapplier.desktop.dialog.about.AboutDialog
+import com.x256n.regexapplier.desktop.dialog.regex.RegexDialog
+import com.x256n.regexapplier.desktop.dialog.regex.RegexViewModel
 import com.x256n.regexapplier.desktop.dialog.settings.SettingsDialog
 import com.x256n.regexapplier.desktop.navigation.Destination
 import com.x256n.regexapplier.desktop.screen.component.MainMenu
@@ -57,18 +62,18 @@ fun main() {
             MaterialTheme {
                 val navigator = rememberNavigatorByKey(initialContext = Destination.Home()) { dest ->
 
-                    val viewModel by KoinJavaComponent.inject<HomeViewModel>(HomeViewModel::class.java)
+                    val homeViewModel by KoinJavaComponent.inject<HomeViewModel>(HomeViewModel::class.java)
                     rememberSaveable(dest) {
-                        viewModel.onScreenDisplayed(dest)
+                        homeViewModel.onScreenDisplayed(dest)
                     }
 
                     MenuBar {
                         MainMenu(
                             onOpenFile = {
-                                viewModel.onEvent(HomeEvent.OpenFile())
+                                homeViewModel.onEvent(HomeEvent.OpenFile())
                             },
                             onClearPanels = {
-                                viewModel.onEvent(HomeEvent.ClearPanels)
+                                homeViewModel.onEvent(HomeEvent.ClearPanels)
                             },
                             onExit = {
                                 exitProcess(0)
@@ -89,11 +94,13 @@ fun main() {
                         Box(modifier = Modifier.weight(1f)) {
 
                             HomeScreen(
-                                state = viewModel.state.value,
-                                sendEvent = viewModel::onEvent,
+                                action = if (dest is Destination.Home) dest.action else Destination.Home.Action.None,
+                                state = homeViewModel.state.value,
+                                sendEvent = homeViewModel::onEvent,
                                 rootPanel = window.rootPane,
                                 windowPositionX = state.position.x,
-                                windowPositionY = state.position.y
+                                windowPositionY = state.position.y,
+                                navigate = { navigator.goTo(it) }
                             )
 
                             when (dest) {
@@ -104,6 +111,35 @@ fun main() {
                                     SettingsDialog(
                                         onCancel = {
                                             navigator.goBack()
+                                        }
+                                    )
+                                }
+
+                                is Destination.RegexDialog -> {
+                                    val viewModel by KoinJavaComponent.inject<RegexViewModel>(RegexViewModel::class.java)
+                                    val dialogState = remember {
+                                        DialogState(
+                                            position = WindowPosition.Aligned(Alignment.Center),
+                                            width = 360.dp,
+                                            height = 480.dp
+                                        )
+                                    }
+                                    RegexDialog(
+                                        action = dest.action,
+                                        state = viewModel.state,
+                                        dialogState = dialogState,
+                                        sendEvent = viewModel::sendEvent,
+                                        onRegexChange = {
+                                            homeViewModel.onEvent(HomeEvent.RegexChanged(it))
+                                        },
+                                        onCancel = {
+                                            navigator.goBack()
+                                        },
+                                        onSave = { regexModel ->
+                                            navigator.goTo(
+                                                Destination.Home(action = Destination.Home.Action.RegexChange(regexModel)),
+                                                StackDuplicateContentStrategy.CLEAR_STACK
+                                            )
                                         }
                                     )
                                 }
@@ -131,7 +167,6 @@ fun configureKoin() {
         logger(PrintLogger())
         modules(ModulesInjection.viewmodelBeans)
         modules(ModulesInjection.usecaseBeans)
-        modules(ModulesInjection.daoBeans)
         modules(ModulesInjection.managerBeans)
         modules(ModulesInjection.otherBeans)
     }

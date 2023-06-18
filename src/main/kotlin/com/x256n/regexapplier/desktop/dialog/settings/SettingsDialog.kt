@@ -44,7 +44,7 @@ fun SettingsDialog(
         undecorated = false,
         resizable = false,
         visible = true,
-        state = DialogState(width = 380.dp, height = 240.dp),
+        state = DialogState(width = 380.dp, height = 168.dp),
         onKeyEvent = {
             if (it.key == Key.Escape) {
                 onCancel()
@@ -67,18 +67,18 @@ fun SettingsDialog(
                     .fillMaxSize()
                     .padding(MaterialTheme.spaces.medium)
             ) {
-                WinCheckbox(
-                    text = "Is debug mode",
-                    isChecked = state.isDebugMode,
-                    onCheckedChange = {
-                        viewModel.onEvent(SettingsEvent.IsDebugMode(it))
-                    },
-                    enabled = false
-                )
-                Spacer(
-                    modifier = Modifier
-                        .height(MaterialTheme.spaces.small)
-                )
+//                WinCheckbox(
+//                    text = "Is debug mode",
+//                    isChecked = state.isDebugMode,
+//                    onCheckedChange = {
+//                        viewModel.onEvent(SettingsEvent.IsDebugMode(it))
+//                    },
+//                    enabled = false
+//                )
+//                Spacer(
+//                    modifier = Modifier
+//                        .height(MaterialTheme.spaces.small)
+//                )
                 WinTextField(
                     text = state.processTimeout.toString(),
                     title = "Process timeout (ms):",
